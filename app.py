@@ -784,8 +784,7 @@ def approve_purchase_request(request_id):
     return redirect(url_for("purchase_requests"))
 
 
-
-
+# Purchase Order Routes
 @app.route("/purchase-orders")
 def purchase_orders():
     with get_connection() as connection:
@@ -811,7 +810,7 @@ def purchase_orders():
     return render_template("purchase_orders.html", orders=orders)
 
 
-# Purchase Order
+# Purchase Order Create
 @app.route(
     "/purchase-orders/create/<int:request_id>",
     methods=["GET", "POST"]
@@ -851,11 +850,15 @@ def create_purchase_order(request_id):
             return redirect(url_for("purchase_orders"))
 
         if request.method == "POST":
-            supplier_id = request.form.get("supplier_id", "").strip()
+            supplier_id_raw = request.form.get(
+                "supplier_id", ""
+            ).strip()
             notes = request.form.get("notes", "").strip()
 
             try:
-                supplier_id = int(supplier_id)
+                supplier_id = int(supplier_id_raw)
+                if supplier_id <= 0:
+                    raise ValueError
             except (ValueError, TypeError):
                 flash("Pilih supplier yang valid.", "error")
                 return redirect(
@@ -882,6 +885,7 @@ def create_purchase_order(request_id):
             po_number = f"PO-{uuid4().hex[:8].upper()}"
 
             try:
+                # Simpan PO dan perbarui status PR dalam satu transaksi.
                 connection.execute(
                     """
                     INSERT INTO purchase_orders (
@@ -900,7 +904,7 @@ def create_purchase_order(request_id):
                     )
                 )
 
-                connection.execute(
+                cursor = connection.execute(
                     """
                     UPDATE purchase_requests
                     SET status = 'Ordered'
@@ -909,14 +913,43 @@ def create_purchase_order(request_id):
                     (request_id,)
                 )
 
+                if cursor.rowcount != 1:
+                    raise RuntimeError(
+                        "Status Purchase Request gagal diperbarui."
+                    )
+
             except sqlite3.IntegrityError:
+                connection.rollback()
                 flash(
-                    "PO gagal dibuat. Request mungkin sudah memiliki PO.",
+                    "PO gagal dibuat. Request mungkin sudah memiliki PO "
+                    "atau data terkait tidak valid.",
                     "error"
                 )
                 return redirect(url_for("purchase_orders"))
 
-            flash(f"Purchase Order {po_number} berhasil dibuat.", "success")
+            except Exception:
+                connection.rollback()
+                app.logger.exception(
+                    "Gagal membuat Purchase Order untuk PR %s",
+                    request_id
+                )
+                flash(
+                    "Terjadi kesalahan saat membuat Purchase Order. "
+                    "Silakan coba kembali.",
+                    "error"
+                )
+                return redirect(
+                    url_for(
+                        "create_purchase_order",
+                        request_id=request_id
+                    )
+                )
+
+            # Berhasil: tampilkan notifikasi dan kembali ke daftar PO.
+            flash(
+                f"Purchase Order {po_number} berhasil dibuat.",
+                "success"
+            )
             return redirect(url_for("purchase_orders"))
 
         suppliers = connection.execute(
@@ -933,8 +966,7 @@ def create_purchase_order(request_id):
         suppliers=suppliers
     )
 
-# 
-
+# Goods Receipt Routes
 @app.route("/goods-receipts")
 def goods_receipts():
     with get_connection() as connection:
@@ -958,7 +990,7 @@ def goods_receipts():
 
     return render_template("goods_receipts.html", receipts=receipts)
 
-# Good Receipt 
+# Goods Receipt Create
 @app.route(
     "/goods-receipts/create/<int:po_id>",
     methods=["GET", "POST"]
@@ -989,7 +1021,8 @@ def create_goods_receipt(po_id):
 
         if order["status"] != "Ordered":
             flash(
-                "Penerimaan hanya bisa dicatat untuk request berstatus Ordered.",
+                "Penerimaan hanya bisa dicatat untuk request "
+                "berstatus Ordered.",
                 "error"
             )
             return redirect(url_for("purchase_orders"))
@@ -1003,7 +1036,10 @@ def create_goods_receipt(po_id):
         ).fetchone()
 
         if existing_receipt:
-            flash("Penerimaan untuk PO ini sudah tercatat.", "error")
+            flash(
+                "Penerimaan untuk PO ini sudah tercatat.",
+                "error"
+            )
             return redirect(url_for("goods_receipts"))
 
         if request.method == "POST":
@@ -1014,20 +1050,25 @@ def create_goods_receipt(po_id):
 
             try:
                 received_quantity = int(quantity_raw)
+
                 if received_quantity <= 0:
                     raise ValueError
-            except ValueError:
-                flash("Jumlah penerimaan harus berupa bilangan positif.", "error")
+
+            except (ValueError, TypeError):
+                flash(
+                    "Jumlah penerimaan harus berupa bilangan positif.",
+                    "error"
+                )
                 return redirect(
                     url_for("create_goods_receipt", po_id=po_id)
                 )
 
-            # Versi MVP ini mencatat penerimaan lengkap,
-            # bukan penerimaan sebagian.
+            # MVP hanya mendukung penerimaan lengkap.
             if received_quantity != order["requested_quantity"]:
                 flash(
-                    f"Jumlah penerimaan harus sama dengan jumlah pesanan "
-                    f"({order['requested_quantity']}) untuk menyelesaikan PO.",
+                    f"Jumlah penerimaan harus sama dengan jumlah "
+                    f"pesanan ({order['requested_quantity']}) "
+                    f"untuk menyelesaikan PO.",
                     "error"
                 )
                 return redirect(
@@ -1052,6 +1093,7 @@ def create_goods_receipt(po_id):
                 return redirect(url_for("purchase_orders"))
 
             try:
+                # Simpan GR dan perbarui status PR dalam satu transaksi.
                 connection.execute(
                     """
                     INSERT INTO goods_receipts (
@@ -1070,7 +1112,7 @@ def create_goods_receipt(po_id):
                     )
                 )
 
-                connection.execute(
+                cursor = connection.execute(
                     """
                     UPDATE purchase_requests
                     SET status = 'Received'
@@ -1079,15 +1121,44 @@ def create_goods_receipt(po_id):
                     (order["request_id"],)
                 )
 
+                if cursor.rowcount != 1:
+                    raise RuntimeError(
+                        "Status Purchase Request gagal diperbarui."
+                    )
+
             except sqlite3.IntegrityError:
+                connection.rollback()
                 flash(
                     "Penerimaan gagal disimpan. "
-                    "Mungkin penerimaan PO ini sudah tercatat.",
+                    "Mungkin penerimaan PO ini sudah tercatat "
+                    "atau data terkait tidak valid.",
                     "error"
                 )
                 return redirect(url_for("goods_receipts"))
 
-            flash("Penerimaan barang berhasil dicatat.", "success")
+            except Exception:
+                connection.rollback()
+                app.logger.exception(
+                    "Gagal mencatat Goods Receipt untuk PO %s",
+                    po_id
+                )
+                flash(
+                    "Terjadi kesalahan saat mencatat penerimaan barang. "
+                    "Silakan coba kembali.",
+                    "error"
+                )
+                return redirect(
+                    url_for(
+                        "create_goods_receipt",
+                        po_id=po_id
+                    )
+                )
+
+            # Berhasil: tampilkan notifikasi dan kembali ke daftar GR.
+            flash(
+                "Penerimaan barang berhasil dicatat.",
+                "success"
+            )
             return redirect(url_for("goods_receipts"))
 
     return render_template(
