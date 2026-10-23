@@ -8,10 +8,59 @@ app.secret_key = "procurement-development-key"
 
 init_db()
 
-
+# Dashboard Route
 @app.route("/")
 def index():
-    return render_template("index.html")
+    with get_connection() as connection:
+        # Ringkasan Purchase Request
+        total_requests = connection.execute(
+            "SELECT COUNT(*) FROM purchase_requests"
+        ).fetchone()[0]
+
+        pending_approvals = connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM purchase_requests
+            WHERE status = 'Submitted'
+            """
+        ).fetchone()[0]
+
+        # Ringkasan Purchase Order
+        total_purchase_orders = connection.execute(
+            "SELECT COUNT(*) FROM purchase_orders"
+        ).fetchone()[0]
+
+        # Ringkasan Goods Receipt
+        total_goods_receipts = connection.execute(
+            "SELECT COUNT(*) FROM goods_receipts"
+        ).fetchone()[0]
+
+        # Daftar Purchase Request terbaru
+        recent_requests = connection.execute(
+            """
+            SELECT
+                pr.request_number,
+                pr.title,
+                u.name AS requester_name,
+                pr.quantity,
+                pr.estimated_cost,
+                pr.status
+            FROM purchase_requests pr
+            JOIN users u ON pr.requester_id = u.id
+            ORDER BY pr.id DESC
+            LIMIT 5
+            """
+        ).fetchall()
+
+    return render_template(
+        "index.html",
+        total_requests=total_requests,
+        pending_approvals=pending_approvals,
+        total_purchase_orders=total_purchase_orders,
+        total_goods_receipts=total_goods_receipts,
+        recent_requests=recent_requests
+    )
+
 
 # Supplier Management Routes
 @app.route("/suppliers")
