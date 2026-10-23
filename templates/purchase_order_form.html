@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buat Purchase Order</title>
+</head>
+<body>
+    <h1>Buat Purchase Order</h1>
+
+    <h3>Informasi Purchase Request</h3>
+    <p>
+        Nomor Request:
+        <strong>{{ purchase_request.request_number }}</strong>
+    </p>
+    <p>Judul: {{ purchase_request.title }}</p>
+    <p>Jumlah: {{ purchase_request.quantity }}</p>
+    <p>
+        Estimasi biaya:
+        Rp {{ "{:,.0f}".format(purchase_request.estimated_cost) }}
+    </p>
+
+    <form method="POST">
+        <div>
+            <label for="supplier_id">Pilih Supplier *</label><br>
+            <select id="supplier_id" name="supplier_id" required>
+                <option value="">-- Pilih Supplier --</option>
+                {% for supplier in suppliers %}
+                    <option value="{{ supplier.id }}">
+                        {{ supplier.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="notes">Catatan Pesanan</label><br>
+            <textarea id="notes" name="notes" rows="4"></textarea>
+        </div>
+
+        <br>
+
+        <button type="submit">Buat Purchase Order</button>
+        <a href="{{ url_for('purchase_requests') }}">Batal</a>
+    </form>
+</body>
+</html>

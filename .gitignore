@@ -1,9 +1,18 @@
+
+# Python
 .venv/
 __pycache__/
 *.py[cod]
+.pytest_cache/
+
+# Environment variables
 .env
+
+# Flask instance
 instance/
+
+# SQLite database
 database.db
+procurement.db
 *.sqlite
 *.sqlite3
-.pytest_cache/

@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Orders</title>
+</head>
+<body>
+    <h1>Purchase Orders</h1>
+
+    <p><a href="/">Kembali ke Dashboard</a></p>
+    <p>
+        <a href="{{ url_for('purchase_requests') }}">
+            Lihat Purchase Requests
+        </a>
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>No. PO</th>
+                <th>No. Request</th>
+                <th>Judul Permintaan</th>
+                <th>Supplier</th>
+                <th>Tanggal Pesanan</th>
+                <th>Catatan</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.po_number }}</td>
+                    <td>{{ order.request_number }}</td>
+                    <td>{{ order.request_title }}</td>
+                    <td>{{ order.supplier_name }}</td>
+                    <td>{{ order.order_date }}</td>
+                    <td>{{ order.notes or '-' }}</td>                   
+                    <td>
+                        {% if order.receipt_id %}
+                            Sudah Diterima
+                        {% elif order.request_status == 'Ordered' %}
+                            <a href="{{ url_for('create_goods_receipt', po_id=order.id) }}">
+                                Catat Penerimaan
+                            </a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7">Belum ada Purchase Order.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

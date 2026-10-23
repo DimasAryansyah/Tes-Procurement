@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catat Penerimaan Barang</title>
+</head>
+<body>
+    <h1>Catat Penerimaan Barang</h1>
+
+    <h3>Informasi Purchase Order</h3>
+    <p>No. PO: <strong>{{ order.po_number }}</strong></p>
+    <p>No. Request: {{ order.request_number }}</p>
+    <p>Judul: {{ order.title }}</p>
+    <p>Jumlah pesanan: {{ order.requested_quantity }}</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+        <div>
+            <label for="received_quantity">Jumlah Diterima *</label><br>
+            <input
+                type="number"
+                id="received_quantity"
+                name="received_quantity"
+                min="1"
+                max="{{ order.requested_quantity }}"
+                value="{{ order.requested_quantity }}"
+                required
+            >
+            <p>
+                Untuk versi ini, jumlah yang diterima harus sama
+                dengan jumlah pesanan.
+            </p>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="notes">Catatan Penerimaan</label><br>
+            <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                placeholder="Contoh: Barang diterima dalam kondisi baik."
+            ></textarea>
+        </div>
+
+        <br>
+
+        <button type="submit">Simpan Penerimaan</button>
+        <a href="{{ url_for('purchase_orders') }}">Batal</a>
+    </form>
+</body>
+</html>

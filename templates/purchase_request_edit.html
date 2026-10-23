@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Purchase Request</title>
+</head>
+<body>
+    <h1>Edit Purchase Request</h1>
+
+    <p>
+        Nomor Request:
+        <strong>{{ purchase_request.request_number }}</strong>
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+        <div>
+            <label for="title">Judul Permintaan *</label><br>
+            <input
+                type="text"
+                id="title"
+                name="title"
+                value="{{ purchase_request.title }}"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="description">Deskripsi</label><br>
+            <textarea
+                id="description"
+                name="description"
+                rows="4"
+            >{{ purchase_request.description or '' }}</textarea>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="quantity">Jumlah *</label><br>
+            <input
+                type="number"
+                id="quantity"
+                name="quantity"
+                min="1"
+                value="{{ purchase_request.quantity }}"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="estimated_cost">Estimasi Biaya *</label><br>
+            <input
+                type="number"
+                id="estimated_cost"
+                name="estimated_cost"
+                min="0"
+                step="0.01"
+                value="{{ purchase_request.estimated_cost }}"
+                required
+            >
+        </div>
+
+        <br>
+
+        <button type="submit">Simpan Perubahan</button>
+        <a href="{{ url_for('purchase_requests') }}">Batal</a>
+    </form>
+</body>
+</html>

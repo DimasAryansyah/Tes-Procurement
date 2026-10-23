@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goods Receipt</title>
+</head>
+<body>
+    <h1>Goods Receipt</h1>
+
+    <p>
+        <a href="/">Kembali ke Dashboard</a>
+        |
+        <a href="{{ url_for('purchase_orders') }}">Purchase Orders</a>
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>No. Penerimaan</th>
+                <th>No. PO</th>
+                <th>No. Request</th>
+                <th>Judul Permintaan</th>
+                <th>Jumlah Diterima</th>
+                <th>Diterima Oleh</th>
+                <th>Tanggal Penerimaan</th>
+                <th>Catatan</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for receipt in receipts %}
+                <tr>
+                    <td>GR-{{ "%04d"|format(receipt.id) }}</td>
+                    <td>{{ receipt.po_number }}</td>
+                    <td>{{ receipt.request_number }}</td>
+                    <td>{{ receipt.request_title }}</td>
+                    <td>{{ receipt.received_quantity }}</td>
+                    <td>{{ receipt.receiver_name }}</td>
+                    <td>{{ receipt.received_date }}</td>
+                    <td>{{ receipt.notes or '-' }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="8">Belum ada penerimaan barang.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
