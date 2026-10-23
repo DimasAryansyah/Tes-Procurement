@@ -1,67 +1,210 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ "Edit Barang" if item else "Tambah Barang" }}</title>
-</head>
-<body>
-    <h1>{{ "Edit Barang" if item else "Tambah Barang" }}</h1>
+{% extends "base.html" %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+{% block title %}{{ "Edit Barang" if item else "Tambah Barang" }}{% endblock %}
 
-    <form method="POST">
-        <p>
-            <label for="name">Nama Barang *</label><br>
-            <input
-                type="text"
-                id="name"
-                name="name"
-                value="{{ item.name if item else '' }}"
-                required
-            >
-        </p>
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6">
 
-        <p>
-            <label for="category">Kategori</label><br>
-            <input
-                type="text"
-                id="category"
-                name="category"
-                value="{{ (item.category or '') if item else '' }}"
-            >
-        </p>
+    <!-- Header -->
+    <div>
+        <a
+            href="{{ url_for('items') }}"
+            class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-800"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m15 18-6-6 6-6"/>
+            </svg>
+            Kembali ke Item Management
+        </a>
 
-        <p>
-            <label for="description">Deskripsi</label><br>
-            <textarea
-                id="description"
-                name="description"
-                rows="4"
-            >{{ (item.description or '') if item else '' }}</textarea>
-        </p>
+        <div class="mt-4">
+            <p class="text-sm font-medium text-blue-600">
+                Procurement Management
+            </p>
 
-        <p>
-            <label for="unit">Satuan *</label><br>
-            <input
-                type="text"
-                id="unit"
-                name="unit"
-                value="{{ item.unit if item else 'Unit' }}"
-                required
-            >
-        </p>
+            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-800">
+                {{ "Edit Barang" if item else "Tambah Barang" }}
+            </h1>
 
-        <button type="submit">
-            {{ "Simpan Perubahan" if item else "Tambah Barang" }}
-        </button>
+            <p class="mt-1 text-sm text-slate-500">
+                {% if item %}
+                    Perbarui informasi barang yang sudah terdaftar dalam sistem.
+                {% else %}
+                    Lengkapi informasi barang baru agar dapat digunakan dalam Purchase Request.
+                {% endif %}
+            </p>
+        </div>
+    </div>
 
-        <a href="{{ url_for('items') }}">Batal</a>
-    </form>
-</body>
-</html>
+    <!-- Form Card -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+        <div class="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M3 7h18v13H3z"/>
+                    <path d="m3 7 3-4h12l3 4M8 12h8M8 16h5"/>
+                </svg>
+            </div>
+
+            <div>
+                <h2 class="font-semibold text-slate-800">
+                    Informasi Barang
+                </h2>
+                <p class="text-sm text-slate-500">
+                    Isi detail barang pada kolom berikut.
+                </p>
+            </div>
+        </div>
+
+        <form method="POST" class="space-y-6 p-5">
+
+            <!-- Nama Barang -->
+            <div>
+                <label
+                    for="name"
+                    class="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                    Nama Barang <span class="text-red-500">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value="{{ item.name if item else '' }}"
+                    maxlength="200"
+                    placeholder="Contoh: Laptop, Printer, atau Monitor"
+                    required
+                    class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Masukkan nama barang yang jelas dan mudah dikenali.
+                </p>
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label
+                    for="category"
+                    class="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                    Kategori
+                    <span class="font-normal text-slate-400">(Opsional)</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="category"
+                    name="category"
+                    value="{{ (item.category or '') if item else '' }}"
+                    maxlength="100"
+                    placeholder="Contoh: Elektronik, ATK, atau Peralatan Kantor"
+                    class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Kategori membantu mengelompokkan barang dalam sistem.
+                </p>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label
+                    for="description"
+                    class="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                    Deskripsi
+                    <span class="font-normal text-slate-400">(Opsional)</span>
+                </label>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="4"
+                    maxlength="1000"
+                    placeholder="Masukkan spesifikasi atau keterangan tambahan tentang barang..."
+                    class="w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >{{ (item.description or '') if item else '' }}</textarea>
+
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Tambahkan spesifikasi atau informasi yang relevan jika diperlukan.
+                </p>
+            </div>
+
+            <!-- Unit -->
+            <div>
+                <label
+                    for="unit"
+                    class="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                    Satuan <span class="text-red-500">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="unit"
+                    name="unit"
+                    value="{{ item.unit if item else 'Unit' }}"
+                    maxlength="50"
+                    placeholder="Contoh: Unit, Pcs, Box, atau Paket"
+                    required
+                    class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Gunakan satuan yang sesuai dengan cara barang dihitung.
+                </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                <a
+                    href="{{ url_for('items') }}"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                    Batal
+                </a>
+
+                <button
+                    type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                >
+                    {% if item %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m5 12 4 4L19 6"/>
+                        </svg>
+                        Simpan Perubahan
+                    {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Tambah Barang
+                    {% endif %}
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Information Note -->
+    <div class="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-5 w-5 shrink-0 text-blue-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 11v5M12 8h.01"/>
+        </svg>
+
+        <div>
+            <p class="text-sm font-semibold text-blue-900">
+                Informasi
+            </p>
+            <p class="mt-1 text-sm text-blue-800">
+                Nama barang dan satuan wajib diisi. Barang yang sudah terdaftar dapat dipilih saat membuat Purchase Request.
+            </p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

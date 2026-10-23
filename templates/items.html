@@ -1,71 +1,237 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Item Management</title>
-</head>
-<body>
-    <h1>Item Management</h1>
+{% extends "base.html" %}
 
-    <p>
-        <a href="{{ url_for('add_item') }}">+ Tambah Barang</a>
-    </p>
+{% block title %}Item Management{% endblock %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+{% block content %}
+<div class="space-y-6">
 
-    <p>Daftar barang yang terdaftar dalam sistem.</p>
+    <!-- Header -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm font-medium text-blue-600">
+                Procurement Management
+            </p>
+            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-800">
+                Item Management
+            </h1>
+            <p class="mt-1 text-sm text-slate-500">
+                Kelola daftar barang yang tersedia untuk kebutuhan pengadaan.
+            </p>
+        </div>
 
-    <a href="/">Kembali ke Dashboard</a>
+        <a
+            href="{{ url_for('add_item') }}"
+            class="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Tambah Barang
+        </a>
+    </div>
 
-    <table border="1" cellpadding="8" cellspacing="0">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nama Barang</th>
-                <th>Kategori</th>
-                <th>Deskripsi</th>
-                <th>Satuan</th>
-                <th>Tanggal Dibuat (WIB)</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
+    <!-- Summary -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">
+                        Total Barang
+                    </p>
+                    <p class="mt-2 text-3xl font-bold text-slate-800">
+                        {{ items|length }}
+                    </p>
+                    <p class="mt-1 text-xs text-slate-500">
+                        Barang terdaftar dalam sistem
+                    </p>
+                </div>
 
-        <tbody>
-            {% for item in items %}
-                <tr>
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.category or '-' }}</td>
-                    <td>{{ item.description or '-' }}</td>
-                    <td>{{ item.unit }}</td>
-                    <td>{{ item.created_at }}</td>
-                    <td>
-                        <a href="{{ url_for('edit_item', item_id=item.id) }}">
-                            Edit
-                        </a>
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M3 7h18v13H3z"/>
+                        <path d="m3 7 3-4h12l3 4M8 12h8M8 16h5"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
 
-                        <form
-                            action="{{ url_for('delete_item', item_id=item.id) }}"
-                            method="POST"
-                            style="display: inline;"
-                            onsubmit="return confirm('Yakin ingin menghapus barang ini?');"
-                        >
-                            <button type="submit">Hapus</button>
-                        </form>
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="7">Belum ada data barang.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">
+                        Kategori Barang
+                    </p>
+                    <p class="mt-2 text-3xl font-bold text-blue-700">
+                        {% set categories = namespace(values=[]) %}
+                        {% for item in items %}
+                            {% if item.category and item.category not in categories.values %}
+                                {% set _ = categories.values.append(item.category) %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ categories.values|length }}
+                    </p>
+                    <p class="mt-1 text-xs text-slate-500">
+                        Kategori berbeda yang digunakan
+                    </p>
+                </div>
+
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M20 13 13 20 3 10V3h7l10 10Z"/>
+                        <circle cx="7.5" cy="7.5" r="1"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+        <div class="flex flex-col gap-2 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="font-semibold text-slate-800">
+                    Daftar Barang
+                </h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    Informasi barang yang dapat digunakan dalam Purchase Request.
+                </p>
+            </div>
+
+            <span class="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                {{ items|length }} barang
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[1000px] text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-5 py-4 font-semibold">ID</th>
+                        <th class="px-5 py-4 font-semibold">Nama Barang</th>
+                        <th class="px-5 py-4 font-semibold">Kategori</th>
+                        <th class="px-5 py-4 font-semibold">Deskripsi</th>
+                        <th class="px-5 py-4 font-semibold">Satuan</th>
+                        <th class="px-5 py-4 font-semibold">Tanggal Dibuat (WIB)</th>
+                        <th class="px-5 py-4 text-center font-semibold">Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in items %}
+                    <tr class="transition hover:bg-slate-50/80">
+
+                        <td class="whitespace-nowrap px-5 py-4 text-slate-500">
+                            {{ item.id }}
+                        </td>
+
+                        <td class="px-5 py-4">
+                            <p class="font-semibold text-slate-800">
+                                {{ item.name }}
+                            </p>
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4">
+                            {% if item.category %}
+                                <span class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                                    {{ item.category }}
+                                </span>
+                            {% else %}
+                                <span class="text-slate-400">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="max-w-xs px-5 py-4 text-slate-500">
+                            <p class="line-clamp-2">
+                                {{ item.description or '-' }}
+                            </p>
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4">
+                            <span class="font-medium text-slate-700">
+                                {{ item.unit }}
+                            </span>
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-slate-500">
+                            {{ item.created_at or '-' }}
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <a
+                                    href="{{ url_for('edit_item', item_id=item.id) }}"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="m16 4 4 4L9 19l-5 1 1-5L16 4Z"/>
+                                    </svg>
+                                    Edit
+                                </a>
+
+                                <form
+                                    action="{{ url_for('delete_item', item_id=item.id) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Yakin ingin menghapus barang ini?');"
+                                >
+                                    <button
+                                        type="submit"
+                                        class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition duration-200 hover:bg-red-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/>
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-5 py-16 text-center">
+                            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <path d="M3 7h18v13H3z"/>
+                                    <path d="m3 7 3-4h12l3 4"/>
+                                </svg>
+                            </div>
+
+                            <h3 class="mt-4 text-sm font-semibold text-slate-800">
+                                Belum Ada Data Barang
+                            </h3>
+
+                            <p class="mx-auto mt-1 max-w-md text-sm text-slate-500">
+                                Tambahkan barang terlebih dahulu agar dapat digunakan dalam Purchase Request.
+                            </p>
+
+                            <a
+                                href="{{ url_for('add_item') }}"
+                                class="mt-4 inline-flex items-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                                Tambah Barang
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if items %}
+        <div class="border-t border-slate-200 px-5 py-3">
+            <p class="text-xs text-slate-500">
+                Menampilkan {{ items|length }} barang.
+            </p>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}
