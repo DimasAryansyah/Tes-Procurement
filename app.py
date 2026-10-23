@@ -340,6 +340,35 @@ def purchase_requests():
         requests=requests
     )
 
+# Purchase Request Detail
+@app.route("/purchase-requests/<int:request_id>")
+def purchase_request_detail(request_id):
+    with get_connection() as connection:
+        purchase_request = connection.execute(
+            """
+            SELECT
+                pr.*,
+                u.name AS requester_name,
+                i.name AS item_name,
+                i.category AS item_category,
+                i.unit AS item_unit
+            FROM purchase_requests pr
+            JOIN users u ON pr.requester_id = u.id
+            LEFT JOIN items i ON pr.item_id = i.id
+            WHERE pr.id = ?
+            """,
+            (request_id,)
+        ).fetchone()
+
+    if purchase_request is None:
+        flash("Purchase Request tidak ditemukan.", "error")
+        return redirect(url_for("purchase_requests"))
+
+    return render_template(
+        "purchase_request_detail.html",
+        purchase_request=purchase_request
+    )
+
 # Purchase Request Add
 @app.route("/purchase-requests/add", methods=["GET", "POST"])
 def add_purchase_request():

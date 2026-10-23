@@ -235,6 +235,27 @@
                     <!-- Actions -->
                     <td class="min-w-[200px] px-5 py-4">
                         <div class="flex flex-col items-start gap-2">
+                            <!-- Detail -->
+                                <a href="{{ url_for('purchase_request_detail', request_id=item.id) }}"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-slate-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition duration-200 hover:bg-slate-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2">
+
+                                    <!-- Heroicon: Eye -->
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="1.5"
+                                        stroke="currentColor"
+                                        class="h-4 w-4">
+                                        <path stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12Z" />
+                                        <path stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    </svg>
+
+                                    Detail
+                                </a>
 
                             {% if item.status == 'Draft' %}
 
@@ -272,6 +293,8 @@
                                         Delete
                                     </button>
                                 </form>
+
+                                
 
                                 <!-- Submit Request -->
                                 <form method="POST"
@@ -351,12 +374,6 @@
                                     </svg>
                                     Buat PO
                                 </a>
-
-                            {% else %}
-
-                                <span class="px-3 py-2 text-xs text-slate-400">
-                                    Tidak ada aksi
-                                </span>
 
                             {% endif %}
 

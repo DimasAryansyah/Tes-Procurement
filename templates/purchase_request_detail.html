@@ -1,0 +1,152 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <p class="text-sm text-gray-500 mb-1">
+                Procurement / Purchase Requests / Detail
+            </p>
+            <h1 class="text-2xl font-bold text-gray-800">
+                Purchase Request Detail
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">
+                Informasi lengkap permintaan pengadaan barang.
+            </p>
+        </div>
+
+        <a href="{{ url_for('purchase_requests') }}"
+           class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+            &larr; Kembali
+        </a>
+    </div>
+
+    <!-- Request Summary -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+                <p class="text-sm text-gray-500">Nomor Purchase Request</p>
+                <h2 class="text-xl font-bold text-gray-900 mt-1">
+                    {{ purchase_request['request_number'] }}
+                </h2>
+                <p class="text-sm text-gray-500 mt-2">
+                    Diajukan oleh
+                    <span class="font-medium text-gray-700">
+                        {{ purchase_request['requester_name'] }}
+                    </span>
+                </p>
+            </div>
+
+            {% set status = purchase_request['status'] %}
+            {% if status == 'Draft' %}
+                {% set badge_class = 'bg-gray-100 text-gray-700' %}
+            {% elif status == 'Submitted' %}
+                {% set badge_class = 'bg-amber-100 text-amber-700' %}
+            {% elif status == 'Approved' %}
+                {% set badge_class = 'bg-green-100 text-green-700' %}
+            {% elif status == 'Rejected' %}
+                {% set badge_class = 'bg-red-100 text-red-700' %}
+            {% elif status == 'Ordered' %}
+                {% set badge_class = 'bg-blue-100 text-blue-700' %}
+            {% elif status == 'Received' %}
+                {% set badge_class = 'bg-teal-100 text-teal-700' %}
+            {% else %}
+                {% set badge_class = 'bg-gray-100 text-gray-700' %}
+            {% endif %}
+
+            <span class="inline-flex w-fit items-center px-3 py-1.5 rounded-full text-sm font-semibold {{ badge_class }}">
+                {{ status }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Item Information -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800">Informasi Barang</h3>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+            <div>
+                <p class="text-sm text-gray-500 mb-1">Nama Barang</p>
+                <p class="font-medium text-gray-800">
+                    {{ purchase_request['item_name'] or purchase_request['title'] or '-' }}
+                </p>
+            </div>
+
+            <div>
+                <p class="text-sm text-gray-500 mb-1">Kategori</p>
+                <p class="font-medium text-gray-800">
+                    {{ purchase_request['item_category'] or '-' }}
+                </p>
+            </div>
+
+            <div>
+                <p class="text-sm text-gray-500 mb-1">Kuantitas</p>
+                <p class="font-medium text-gray-800">
+                    {{ purchase_request['quantity'] }}
+                    {{ purchase_request['item_unit'] or 'unit' }}
+                </p>
+            </div>
+
+            <div>
+                <p class="text-sm text-gray-500 mb-1">Estimasi Biaya</p>
+                <p class="text-lg font-bold text-gray-900">
+                    {% if purchase_request['estimated_cost'] is not none %}
+                        Rp {{ "{:,.0f}".format(purchase_request['estimated_cost']).replace(',', '.') }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="md:col-span-2">
+                <p class="text-sm text-gray-500 mb-1">Deskripsi / Keperluan</p>
+                <div class="mt-2 p-4 bg-gray-50 rounded-lg text-gray-700 whitespace-pre-line">
+                    {{ purchase_request['description'] or '-' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Information -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800">Informasi Request</h3>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <p class="text-sm text-gray-500 mb-1">ID Request</p>
+                <p class="font-medium text-gray-800">
+                    #{{ purchase_request['id'] }}
+                </p>
+            </div>
+
+            <div>
+                <p class="text-sm text-gray-500 mb-1">Status Saat Ini</p>
+                <p class="font-medium text-gray-800">{{ status }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Action -->
+    <div class="flex flex-wrap justify-end gap-3">
+        {% if status == 'Draft' %}
+            <a href="{{ url_for('edit_purchase_request', request_id=purchase_request['id']) }}"
+               class="inline-flex items-center px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
+                Edit Request
+            </a>
+        {% endif %}
+
+        <a href="{{ url_for('purchase_requests') }}"
+           class="inline-flex items-center px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+            Kembali ke Daftar
+        </a>
+    </div>
+
+</div>
+{% endblock %}
