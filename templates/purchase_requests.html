@@ -188,7 +188,14 @@
                         {{ item.requester_name }}
                     </td>
 
-                    <td class="px-5 py-4">{{ item.quantity }}</td>
+                    <td class="whitespace-nowrap px-5 py-4">
+                        <span class="font-semibold text-slate-700">
+                            {{ item.quantity }}
+                        </span>
+                        <span class="text-slate-500">
+                            {{ item.item_unit or 'unit' }}
+                        </span>
+                    </td>
 
                     <td class="whitespace-nowrap px-5 py-4">
                         Rp {{ "{:,.0f}".format(item.estimated_cost) }}

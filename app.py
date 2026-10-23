@@ -327,7 +327,8 @@ def purchase_requests():
             SELECT
                 pr.*,
                 u.name AS requester_name,
-                i.name AS item_name
+                i.name AS item_name,
+                i.unit AS item_unit
             FROM purchase_requests pr
             JOIN users u ON pr.requester_id = u.id
             LEFT JOIN items i ON pr.item_id = i.id
