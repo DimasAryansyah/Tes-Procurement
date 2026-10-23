@@ -26,6 +26,7 @@
         <thead>
             <tr>
                 <th>No. Request</th>
+                <th>Barang</th>
                 <th>Judul</th>
                 <th>Requester</th>
                 <th>Jumlah</th>
@@ -39,6 +40,7 @@
             {% for item in requests %}
                 <tr>
                     <td>{{ item.request_number }}</td>
+                    <td>{{ item.item_name or '-' }}</td>
                     <td>{{ item.title }}</td>
                     <td>{{ item.requester_name }}</td>
                     <td>{{ item.quantity }}</td>
@@ -108,7 +110,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="8">
+                    <td colspan="9">
                         Belum ada permintaan pengadaan.
                     </td>
                 </tr>

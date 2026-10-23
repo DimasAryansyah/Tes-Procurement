@@ -273,20 +273,22 @@ def delete_item(item_id):
 @app.route("/purchase-requests")
 def purchase_requests():
     with get_connection() as connection:
-        requests_list = connection.execute(
+        requests = connection.execute(
             """
             SELECT
                 pr.*,
-                u.name AS requester_name
+                u.name AS requester_name,
+                i.name AS item_name
             FROM purchase_requests pr
             JOIN users u ON pr.requester_id = u.id
+            LEFT JOIN items i ON pr.item_id = i.id
             ORDER BY pr.id DESC
             """
         ).fetchall()
 
     return render_template(
         "purchase_requests.html",
-        requests=requests_list
+        requests=requests
     )
 
 # Purchase Request Add
@@ -428,6 +430,7 @@ def add_purchase_request():
         items=items
     )
 
+
 # Purchase Request Edit
 @app.route(
     "/purchase-requests/<int:request_id>/edit",
@@ -448,7 +451,7 @@ def edit_purchase_request(request_id):
             flash("Purchase Request tidak ditemukan.", "error")
             return redirect(url_for("purchase_requests"))
 
-        # Request yang sudah masuk proses approval tidak boleh diedit.
+        # Hanya Draft yang dapat diedit.
         if purchase_request["status"] != "Draft":
             flash(
                 "Hanya Purchase Request berstatus Draft yang dapat diedit.",
@@ -457,6 +460,7 @@ def edit_purchase_request(request_id):
             return redirect(url_for("purchase_requests"))
 
         if request.method == "POST":
+            item_id_raw = request.form.get("item_id", "").strip()
             title = request.form.get("title", "").strip()
             description = request.form.get("description", "").strip()
             quantity_raw = request.form.get("quantity", "").strip()
@@ -464,15 +468,24 @@ def edit_purchase_request(request_id):
                 "estimated_cost", ""
             ).strip()
 
+            # Validasi Item
+            try:
+                item_id = int(item_id_raw)
+                if item_id <= 0:
+                    raise ValueError
+            except (ValueError, TypeError):
+                flash("Silakan pilih barang yang valid.", "error")
+                return redirect(
+                    url_for("edit_purchase_request", request_id=request_id)
+                )
+
             if not title:
                 flash("Judul permintaan wajib diisi.", "error")
                 return redirect(
-                    url_for(
-                        "edit_purchase_request",
-                        request_id=request_id
-                    )
+                    url_for("edit_purchase_request", request_id=request_id)
                 )
 
+            # Validasi jumlah dan biaya
             try:
                 quantity = int(quantity_raw)
                 estimated_cost = float(estimated_cost_raw)
@@ -492,22 +505,33 @@ def edit_purchase_request(request_id):
                     "error"
                 )
                 return redirect(
-                    url_for(
-                        "edit_purchase_request",
-                        request_id=request_id
-                    )
+                    url_for("edit_purchase_request", request_id=request_id)
+                )
+
+            # Pastikan Item yang dipilih tersedia
+            selected_item = connection.execute(
+                "SELECT id FROM items WHERE id = ?",
+                (item_id,)
+            ).fetchone()
+
+            if selected_item is None:
+                flash("Barang tidak ditemukan.", "error")
+                return redirect(
+                    url_for("edit_purchase_request", request_id=request_id)
                 )
 
             connection.execute(
                 """
                 UPDATE purchase_requests
-                SET title = ?,
+                SET item_id = ?,
+                    title = ?,
                     description = ?,
                     quantity = ?,
                     estimated_cost = ?
                 WHERE id = ? AND status = 'Draft'
                 """,
                 (
+                    item_id,
                     title,
                     description,
                     quantity,
@@ -519,10 +543,21 @@ def edit_purchase_request(request_id):
             flash("Purchase Request berhasil diperbarui.", "success")
             return redirect(url_for("purchase_requests"))
 
+        # Ambil daftar Item untuk dropdown
+        items = connection.execute(
+            """
+            SELECT id, name, category, unit, description
+            FROM items
+            ORDER BY name ASC
+            """
+        ).fetchall()
+
     return render_template(
         "purchase_request_edit.html",
-        purchase_request=purchase_request
+        purchase_request=purchase_request,
+        items=items
     )
+
 
 # Purchase Rqquest Delete
 @app.route(
