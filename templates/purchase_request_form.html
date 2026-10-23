@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -16,22 +17,49 @@
 
     <form method="POST">
         <div>
-            <label for="title">Judul Permintaan *</label><br>
-            <input type="text" id="title" name="title" required>
+            <label for="item_id">Pilih Barang *</label><br>
+            <select id="item_id" name="item_id" required>
+                <option value="">-- Pilih Barang --</option>
+                {% for item in items %}
+                    <option
+                        value="{{ item.id }}"
+                        data-description="{{ item.description or '' }}"
+                    >
+                        {{ item.name }} - {{ item.category or 'Tanpa Kategori' }}
+                        ({{ item.unit }})
+                    </option>
+                {% endfor %}
+            </select>
+
+            {% if not items %}
+                <p>Belum ada barang terdaftar. Silakan tambahkan barang terlebih dahulu.</p>
+                <a href="{{ url_for('add_item') }}">Tambah Barang</a>
+            {% endif %}
         </div>
 
         <br>
 
         <div>
             <label for="description">Deskripsi Kebutuhan</label><br>
-            <textarea id="description" name="description" rows="4"></textarea>
+            <textarea
+                id="description"
+                name="description"
+                rows="4"
+            ></textarea>
         </div>
 
         <br>
 
         <div>
             <label for="quantity">Jumlah *</label><br>
-            <input type="number" id="quantity" name="quantity" min="1" required>
+            <input
+                type="number"
+                id="quantity"
+                name="quantity"
+                min="1"
+                step="1"
+                required
+            >
         </div>
 
         <br>
@@ -50,14 +78,39 @@
 
         <br>
 
-        
-        <button type="submit" name="action" value="draft">
+        <button
+            type="submit"
+            name="action"
+            value="draft"
+            {% if not items %}disabled{% endif %}
+        >
             Simpan Draft
         </button>
-        <button type="submit" name="action" value="submit">
+
+        <button
+            type="submit"
+            name="action"
+            value="submit"
+            {% if not items %}disabled{% endif %}
+        >
             Ajukan Request
         </button>
+
         <a href="{{ url_for('purchase_requests') }}">Batal</a>
     </form>
+
+    <script>
+        const itemSelect = document.getElementById("item_id");
+        const descriptionInput = document.getElementById("description");
+
+        itemSelect.addEventListener("change", function () {
+            const selectedOption = this.options[this.selectedIndex];
+
+            if (selectedOption.value && !descriptionInput.value.trim()) {
+                descriptionInput.value =
+                    selectedOption.dataset.description || "";
+            }
+        });
+    </script>
 </body>
 </html>

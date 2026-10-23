@@ -146,6 +146,129 @@ def delete_supplier(supplier_id):
 
     return redirect(url_for("suppliers"))
 
+
+# Item Management Routes
+@app.route("/items")
+def items():
+    with get_connection() as connection:
+        item_list = connection.execute("""
+            SELECT *
+            FROM items
+            ORDER BY id DESC
+        """).fetchall()
+
+    return render_template("items.html", items=item_list)
+
+
+# Item Management Add
+@app.route("/items/add", methods=["GET", "POST"])
+def add_item():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        category = request.form.get("category", "").strip()
+        description = request.form.get("description", "").strip()
+        unit = request.form.get("unit", "").strip()
+
+        if not name:
+            flash("Nama barang wajib diisi.", "error")
+            return redirect(url_for("add_item"))
+
+        if not unit:
+            flash("Satuan barang wajib diisi.", "error")
+            return redirect(url_for("add_item"))
+
+        with get_connection() as connection:
+            connection.execute("""
+                INSERT INTO items (name, category, description, unit)
+                VALUES (?, ?, ?, ?)
+            """, (
+                name,
+                category or None,
+                description or None,
+                unit
+            ))
+
+        flash("Barang berhasil ditambahkan.", "success")
+        return redirect(url_for("items"))
+
+    return render_template("item_form.html")
+
+
+# Item Management Edit
+@app.route("/items/<int:item_id>/edit", methods=["GET", "POST"])
+def edit_item(item_id):
+    with get_connection() as connection:
+        item = connection.execute(
+            "SELECT * FROM items WHERE id = ?",
+            (item_id,)
+        ).fetchone()
+
+        if item is None:
+            flash("Barang tidak ditemukan.", "error")
+            return redirect(url_for("items"))
+
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            category = request.form.get("category", "").strip()
+            description = request.form.get("description", "").strip()
+            unit = request.form.get("unit", "").strip()
+
+            if not name or not unit:
+                flash(
+                    "Nama dan satuan barang wajib diisi.",
+                    "error"
+                )
+                return redirect(
+                    url_for("edit_item", item_id=item_id)
+                )
+
+            connection.execute("""
+                UPDATE items
+                SET name = ?,
+                    category = ?,
+                    description = ?,
+                    unit = ?
+                WHERE id = ?
+            """, (
+                name,
+                category or None,
+                description or None,
+                unit,
+                item_id
+            ))
+
+            flash("Data barang berhasil diperbarui.", "success")
+            return redirect(url_for("items"))
+
+    return render_template("item_form.html", item=item)
+
+
+# Item Management Delete
+@app.route("/items/<int:item_id>/delete", methods=["POST"])
+def delete_item(item_id):
+    try:
+        with get_connection() as connection:
+            cursor = connection.execute(
+                "DELETE FROM items WHERE id = ?",
+                (item_id,)
+            )
+
+            if cursor.rowcount == 0:
+                flash("Barang tidak ditemukan.", "error")
+                return redirect(url_for("items"))
+
+        flash("Barang berhasil dihapus.", "success")
+
+    except sqlite3.IntegrityError:
+        flash(
+            "Barang tidak dapat dihapus karena sudah digunakan "
+            "dalam Purchase Request.",
+            "error"
+        )
+
+    return redirect(url_for("items"))
+
+
 # Purchase Request Routes
 @app.route("/purchase-requests")
 def purchase_requests():
@@ -167,11 +290,10 @@ def purchase_requests():
     )
 
 # Purchase Request Add
-
 @app.route("/purchase-requests/add", methods=["GET", "POST"])
 def add_purchase_request():
     if request.method == "POST":
-        title = request.form.get("title", "").strip()
+        item_id_raw = request.form.get("item_id", "").strip()
         description = request.form.get("description", "").strip()
         quantity_raw = request.form.get("quantity", "").strip()
         estimated_cost_raw = request.form.get(
@@ -179,10 +301,16 @@ def add_purchase_request():
         ).strip()
         action = request.form.get("action", "submit")
 
-        if not title:
-            flash("Judul permintaan wajib diisi.", "error")
+        # Validasi pilihan barang
+        try:
+            item_id = int(item_id_raw)
+            if item_id <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            flash("Silakan pilih barang yang valid.", "error")
             return redirect(url_for("add_purchase_request"))
 
+        # Validasi jumlah dan estimasi biaya
         try:
             quantity = int(quantity_raw)
             estimated_cost = float(estimated_cost_raw)
@@ -203,9 +331,26 @@ def add_purchase_request():
             )
             return redirect(url_for("add_purchase_request"))
 
+        if action not in ("draft", "submit"):
+            action = "submit"
+
         status = "Draft" if action == "draft" else "Submitted"
 
         with get_connection() as connection:
+            # Ambil barang yang dipilih
+            item = connection.execute(
+                """
+                SELECT id, name, description
+                FROM items
+                WHERE id = ?
+                """,
+                (item_id,)
+            ).fetchone()
+
+            if item is None:
+                flash("Barang tidak ditemukan.", "error")
+                return redirect(url_for("add_purchase_request"))
+
             requester = connection.execute(
                 """
                 SELECT id FROM users
@@ -223,24 +368,32 @@ def add_purchase_request():
 
             request_number = f"PR-{uuid4().hex[:8].upper()}"
 
+            # Gunakan nama barang sebagai judul Purchase Request.
+            # Jika deskripsi kosong, gunakan deskripsi barang.
+            final_description = (
+                description or item["description"] or ""
+            )
+
             connection.execute(
                 """
                 INSERT INTO purchase_requests (
                     request_number,
                     requester_id,
+                    item_id,
                     title,
                     description,
                     quantity,
                     estimated_cost,
                     status
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     request_number,
                     requester["id"],
-                    title,
-                    description,
+                    item["id"],
+                    item["name"],
+                    final_description,
                     quantity,
                     estimated_cost,
                     status
@@ -248,13 +401,32 @@ def add_purchase_request():
             )
 
         if status == "Draft":
-            flash("Purchase Request berhasil disimpan sebagai Draft.", "success")
+            flash(
+                "Purchase Request berhasil disimpan sebagai Draft.",
+                "success"
+            )
         else:
-            flash("Purchase Request berhasil diajukan untuk approval.", "success")
+            flash(
+                "Purchase Request berhasil diajukan untuk approval.",
+                "success"
+            )
 
         return redirect(url_for("purchase_requests"))
 
-    return render_template("purchase_request_form.html")
+    # Ambil daftar barang untuk dropdown form
+    with get_connection() as connection:
+        items = connection.execute(
+            """
+            SELECT id, name, category, unit, description
+            FROM items
+            ORDER BY name ASC
+            """
+        ).fetchall()
+
+    return render_template(
+        "purchase_request_form.html",
+        items=items
+    )
 
 # Purchase Request Edit
 @app.route(

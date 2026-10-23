@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ "Edit Barang" if item else "Tambah Barang" }}</title>
+</head>
+<body>
+    <h1>{{ "Edit Barang" if item else "Tambah Barang" }}</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+        <p>
+            <label for="name">Nama Barang *</label><br>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                value="{{ item.name if item else '' }}"
+                required
+            >
+        </p>
+
+        <p>
+            <label for="category">Kategori</label><br>
+            <input
+                type="text"
+                id="category"
+                name="category"
+                value="{{ (item.category or '') if item else '' }}"
+            >
+        </p>
+
+        <p>
+            <label for="description">Deskripsi</label><br>
+            <textarea
+                id="description"
+                name="description"
+                rows="4"
+            >{{ (item.description or '') if item else '' }}</textarea>
+        </p>
+
+        <p>
+            <label for="unit">Satuan *</label><br>
+            <input
+                type="text"
+                id="unit"
+                name="unit"
+                value="{{ item.unit if item else 'Unit' }}"
+                required
+            >
+        </p>
+
+        <button type="submit">
+            {{ "Simpan Perubahan" if item else "Tambah Barang" }}
+        </button>
+
+        <a href="{{ url_for('items') }}">Batal</a>
+    </form>
+</body>
+</html>

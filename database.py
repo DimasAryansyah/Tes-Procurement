@@ -38,10 +38,22 @@ def init_db():
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
+            CREATE TABLE IF NOT EXISTS items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                category TEXT,
+                description TEXT,
+                unit TEXT NOT NULL DEFAULT 'Unit',
+                created_at TEXT DEFAULT (
+                    datetime('now', '+7 hours')
+                )
+            );
+
             CREATE TABLE IF NOT EXISTS purchase_requests (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 request_number TEXT NOT NULL UNIQUE,
                 requester_id INTEGER NOT NULL,
+                item_id INTEGER,
                 title TEXT NOT NULL,
                 description TEXT,
                 quantity INTEGER NOT NULL CHECK (quantity > 0),
@@ -60,7 +72,8 @@ def init_db():
                 ),
                 approval_note TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (requester_id) REFERENCES users(id)
+                FOREIGN KEY (requester_id) REFERENCES users(id),
+                FOREIGN KEY (item_id) REFERENCES items(id)
             );
 
             CREATE TABLE IF NOT EXISTS purchase_orders (
@@ -91,8 +104,59 @@ def init_db():
             );
         """)
 
+        # Tambahkan item_id ke tabel lama jika belum tersedia.
+        # Data Purchase Request yang sudah ada tetap dipertahankan.
+        columns = connection.execute(
+            "PRAGMA table_info(purchase_requests)"
+        ).fetchall()
+
+        column_names = {column["name"] for column in columns}
+
+        if "item_id" not in column_names:
+            connection.execute("""
+                ALTER TABLE purchase_requests
+                ADD COLUMN item_id INTEGER
+                REFERENCES items(id)
+            """)
+
+        # Sesuaikan timestamp baru dari UTC ke WIB.
+        # Berlaku untuk insert berikutnya, bukan data lama.
+        connection.executescript("""
+            CREATE TRIGGER IF NOT EXISTS suppliers_wib_timestamp
+            AFTER INSERT ON suppliers
+            BEGIN
+                UPDATE suppliers
+                SET created_at = datetime('now', '+7 hours')
+                WHERE id = NEW.id;
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS purchase_requests_wib_timestamp
+            AFTER INSERT ON purchase_requests
+            BEGIN
+                UPDATE purchase_requests
+                SET created_at = datetime('now', '+7 hours')
+                WHERE id = NEW.id;
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS purchase_orders_wib_timestamp
+            AFTER INSERT ON purchase_orders
+            BEGIN
+                UPDATE purchase_orders
+                SET order_date = datetime('now', '+7 hours')
+                WHERE id = NEW.id;
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS goods_receipts_wib_timestamp
+            AFTER INSERT ON goods_receipts
+            BEGIN
+                UPDATE goods_receipts
+                SET received_date = datetime('now', '+7 hours')
+                WHERE id = NEW.id;
+            END;
+        """)
+
 
 if __name__ == "__main__":
     init_db()
-    print("Database Procurement berhasil dibuat!")
+    print("Database Procurement berhasil disiapkan!")
     print(f"Lokasi database: {DATABASE_PATH}")
