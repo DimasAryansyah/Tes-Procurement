@@ -1,70 +1,221 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supplier Management</title>
-</head>
-<body>
-    <h1>Supplier Management</h1>
-    <p>
-        <a href="{{ url_for('add_supplier') }}">+ Tambah Supplier</a>
-    </p>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-        <p>{{ message }}</p>
-    {% endfor %}
-    {% endwith %}
+{% extends "base.html" %}
 
-    <p>Daftar supplier yang terdaftar dalam sistem.</p>
+{% block title %}Supplier Management | Procurement{% endblock %}
 
-    <a href="/">Kembali ke Dashboard</a>
+{% block content %}
 
-    <table border="1" cellpadding="8" cellspacing="0">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nama Supplier</th>
-                <th>Contact Person</th>
-                <th>Email</th>
-                <th>Telepon</th>
-                <th>Alamat</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
+<!-- Page Header -->
+<div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-900">Supplier Management</h2>
+        <p class="mt-2 text-sm text-slate-500">
+            Kelola data supplier yang bekerja sama dengan perusahaan.
+        </p>
+    </div>
 
-        <tbody>
-            {% for supplier in suppliers %}
+    <a href="{{ url_for('add_supplier') }}"
+       class="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-900 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+
+        <svg xmlns="http://www.w3.org/2000/svg"
+             fill="none" viewBox="0 0 24 24"
+             stroke-width="1.5" stroke="currentColor"
+             class="h-5 w-5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+
+        Tambah Supplier
+    </a>
+</div>
+
+<!-- Supplier Summary -->
+<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500">Total Supplier</p>
+            <div class="rounded-lg bg-blue-50 p-2.5 text-blue-700">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     fill="none" viewBox="0 0 24 24"
+                     stroke-width="1.5" stroke="currentColor"
+                     class="h-6 w-6">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198v-.75A6.375 6.375 0 0 0 12 11.595a6.375 6.375 0 0 0-5.999 6.348v.75m11.939 0a9.06 9.06 0 0 1-5.94 2.307 9.06 9.06 0 0 1-5.94-2.307m11.88 0a8.966 8.966 0 0 0 3.12-6.81 8.97 8.97 0 0 0-3.12-6.81M12 11.595a3.375 3.375 0 1 0 0-6.75 3.375 3.375 0 0 0 0 6.75Z" />
+                </svg>
+            </div>
+        </div>
+        <p class="mt-4 text-3xl font-bold text-slate-800">
+            {{ suppliers|length }}
+        </p>
+        <p class="mt-1 text-sm text-slate-500">Supplier terdaftar dalam sistem</p>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500">Kontak Supplier</p>
+            <div class="rounded-lg bg-teal-50 p-2.5 text-teal-700">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     fill="none" viewBox="0 0 24 24"
+                     stroke-width="1.5" stroke="currentColor"
+                     class="h-6 w-6">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M21.75 6.75v10.5A2.25 2.25 0 0 1 19.5 19.5h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75m19.5 0-9.75 6.75L2.25 6.75" />
+                </svg>
+            </div>
+        </div>
+        <p class="mt-4 text-3xl font-bold text-slate-800">
+            {{ suppliers|selectattr('email')|list|length }}
+        </p>
+        <p class="mt-1 text-sm text-slate-500">Memiliki alamat email</p>
+    </div>
+</div>
+
+<!-- Supplier Table -->
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+    <div class="border-b border-slate-200 px-6 py-5">
+        <h3 class="text-lg font-semibold text-slate-900">Daftar Supplier</h3>
+        <p class="mt-1 text-sm text-slate-500">
+            Informasi supplier yang tersimpan di sistem procurement.
+        </p>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[1050px] text-left text-sm">
+            <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
-                    <td>{{ supplier.id }}</td>
-                    <td>{{ supplier.name }}</td>
-                    <td>{{ supplier.contact_person or '-' }}</td>
-                    <td>{{ supplier.email or '-' }}</td>
-                    <td>{{ supplier.phone or '-' }}</td>
-                    <td>{{ supplier.address or '-' }}</td>    
-                    <td>
-                        <a href="{{ url_for('edit_supplier', supplier_id=supplier.id) }}">
-                            Edit
-                        </a>
-
-                        <form
-                            action="{{ url_for('delete_supplier', supplier_id=supplier.id) }}"
-                            method="POST"
-                            style="display: inline;"
-                            onsubmit="return confirm('Yakin ingin menghapus supplier ini?');"
-                        >
-                            <button type="submit">Hapus</button>
-                        </form>
-                    </td>
-
+                    <th class="px-5 py-4">ID</th>
+                    <th class="px-5 py-4">Nama Supplier</th>
+                    <th class="px-5 py-4">Contact Person</th>
+                    <th class="px-5 py-4">Email</th>
+                    <th class="px-5 py-4">Telepon</th>
+                    <th class="px-5 py-4">Alamat</th>
+                    <th class="px-5 py-4 text-center">Aksi</th>
                 </tr>
-            {% else %}
-                <tr>
-                    <td colspan="7">Belum ada data supplier.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+            </thead>
+
+            <tbody class="divide-y divide-slate-100">
+                {% for supplier in suppliers %}
+                    <tr class="align-top transition-colors duration-150 hover:bg-slate-50">
+
+                        <td class="whitespace-nowrap px-5 py-4 font-medium text-slate-500">
+                            #{{ supplier.id }}
+                        </td>
+
+                        <td class="px-5 py-4 font-semibold text-slate-800">
+                            {{ supplier.name }}
+                        </td>
+
+                        <td class="px-5 py-4 text-slate-600">
+                            {{ supplier.contact_person or '-' }}
+                        </td>
+
+                        <td class="px-5 py-4 text-slate-600">
+                            {% if supplier.email %}
+                                <a href="mailto:{{ supplier.email }}"
+                                   class="text-blue-700 transition hover:text-blue-900 hover:underline">
+                                    {{ supplier.email }}
+                                </a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-slate-600">
+                            {% if supplier.phone %}
+                                <a href="tel:{{ supplier.phone }}"
+                                   class="hover:text-blue-700 hover:underline">
+                                    {{ supplier.phone }}
+                                </a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td class="max-w-xs whitespace-normal px-5 py-4 text-slate-600">
+                            {{ supplier.address or '-' }}
+                        </td>
+
+                        <td class="px-5 py-4">
+                            <div class="flex items-center justify-center gap-2">
+
+                                <!-- Edit -->
+                                <a href="{{ url_for('edit_supplier', supplier_id=supplier.id) }}"
+                                   class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         fill="none" viewBox="0 0 24 24"
+                                         stroke-width="1.5" stroke="currentColor"
+                                         class="h-4 w-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M19.5 7.125 16.875 4.5M18 14v4.125A2.875 2.875 0 0 1 15.125 21H5.875A2.875 2.875 0 0 1 3 18.125V8.875A2.875 2.875 0 0 1 5.875 6H10" />
+                                    </svg>
+
+                                    Edit
+                                </a>
+
+                                <!-- Delete -->
+                                <form action="{{ url_for('delete_supplier', supplier_id=supplier.id) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('Yakin ingin menghapus supplier ini?');">
+
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2">
+
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                             fill="none" viewBox="0 0 24 24"
+                                             stroke-width="1.5" stroke="currentColor"
+                                             class="h-4 w-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-10.502.563c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.024 0a3 3 0 0 0-2.99-2.625h-2.564a3 3 0 0 0-2.99 2.625m8.544 0a48.667 48.667 0 0 0-8.544 0" />
+                                        </svg>
+
+                                        Hapus
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-16 text-center">
+                            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5" stroke="currentColor"
+                                     class="h-7 w-7">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198v-.75A6.375 6.375 0 0 0 12 11.595a6.375 6.375 0 0 0-5.999 6.348v.75m11.939 0a9.06 9.06 0 0 1-5.94 2.307 9.06 9.06 0 0 1-5.94-2.307" />
+                                </svg>
+                            </div>
+
+                            <p class="mt-4 font-semibold text-slate-700">
+                                Belum ada supplier
+                            </p>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Tambahkan supplier pertama untuk mulai mengelola data.
+                            </p>
+
+                            <a href="{{ url_for('add_supplier') }}"
+                               class="mt-4 inline-flex items-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-900">
+                                + Tambah Supplier
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="border-t border-slate-200 bg-slate-50 px-6 py-3">
+        <p class="text-sm text-slate-500">
+            Menampilkan {{ suppliers|length }} supplier.
+        </p>
+    </div>
+
+</div>
+
+{% endblock %}

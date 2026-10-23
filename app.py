@@ -373,6 +373,7 @@ def purchase_request_detail(request_id):
 @app.route("/purchase-requests/add", methods=["GET", "POST"])
 def add_purchase_request():
     if request.method == "POST":
+        title = request.form.get("title", "").strip()
         item_id_raw = request.form.get("item_id", "").strip()
         description = request.form.get("description", "").strip()
         quantity_raw = request.form.get("quantity", "").strip()
@@ -381,11 +382,25 @@ def add_purchase_request():
         ).strip()
         action = request.form.get("action", "submit")
 
+        # Validasi judul Purchase Request
+        if not title:
+            flash("Judul Permintaan wajib diisi.", "error")
+            return redirect(url_for("add_purchase_request"))
+
+        if len(title) > 200:
+            flash(
+                "Judul Permintaan maksimal 200 karakter.",
+                "error"
+            )
+            return redirect(url_for("add_purchase_request"))
+
         # Validasi pilihan barang
         try:
             item_id = int(item_id_raw)
+
             if item_id <= 0:
                 raise ValueError
+
         except (ValueError, TypeError):
             flash("Silakan pilih barang yang valid.", "error")
             return redirect(url_for("add_purchase_request"))
@@ -411,6 +426,7 @@ def add_purchase_request():
             )
             return redirect(url_for("add_purchase_request"))
 
+        # Tentukan status berdasarkan tombol yang dipilih
         if action not in ("draft", "submit"):
             action = "submit"
 
@@ -431,9 +447,11 @@ def add_purchase_request():
                 flash("Barang tidak ditemukan.", "error")
                 return redirect(url_for("add_purchase_request"))
 
+            # Ambil user Requester
             requester = connection.execute(
                 """
-                SELECT id FROM users
+                SELECT id
+                FROM users
                 WHERE email = ? AND role = 'Requester'
                 """,
                 ("requester@example.com",)
@@ -446,14 +464,15 @@ def add_purchase_request():
                 )
                 return redirect(url_for("add_purchase_request"))
 
+            # Buat nomor Purchase Request
             request_number = f"PR-{uuid4().hex[:8].upper()}"
 
-            # Gunakan nama barang sebagai judul Purchase Request.
-            # Jika deskripsi kosong, gunakan deskripsi barang.
+            # Gunakan deskripsi barang jika deskripsi kebutuhan kosong
             final_description = (
                 description or item["description"] or ""
             )
 
+            # Simpan Purchase Request ke database
             connection.execute(
                 """
                 INSERT INTO purchase_requests (
@@ -472,7 +491,7 @@ def add_purchase_request():
                     request_number,
                     requester["id"],
                     item["id"],
-                    item["name"],
+                    title,
                     final_description,
                     quantity,
                     estimated_cost,
@@ -480,6 +499,7 @@ def add_purchase_request():
                 )
             )
 
+        # Tampilkan notifikasi sesuai aksi
         if status == "Draft":
             flash(
                 "Purchase Request berhasil disimpan sebagai Draft.",
@@ -493,7 +513,7 @@ def add_purchase_request():
 
         return redirect(url_for("purchase_requests"))
 
-    # Ambil daftar barang untuk dropdown form
+    # GET: Ambil daftar barang untuk dropdown form
     with get_connection() as connection:
         items = connection.execute(
             """

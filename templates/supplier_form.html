@@ -1,85 +1,151 @@
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ 'Edit' if supplier else 'Tambah' }} Supplier</title>
-</head>
-<body>
-    <h1>{{ 'Edit' if supplier else 'Tambah' }} Supplier</h1>
+{% block title %}{{ 'Edit Supplier' if supplier else 'Tambah Supplier' }} | Procurement{% endblock %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+{% block content %}
 
-    <form
-        action="{{ url_for('edit_supplier', supplier_id=supplier.id) if supplier else url_for('add_supplier') }}"
-        method="POST"
-    >
-        <div>
-            <label for="name">Nama Supplier *</label><br>
-            <input
-                type="text"
-                id="name"
-                name="name"
-                value="{{ supplier.name if supplier else '' }}"
-                required
-            >
+<div class="mx-auto max-w-3xl">
+
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="{{ url_for('suppliers') }}"
+           class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-navy">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke-width="1.5"
+                 stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+            Kembali ke Supplier
+        </a>
+
+        <h2 class="text-2xl font-bold text-slate-900">
+            {{ 'Edit Supplier' if supplier else 'Tambah Supplier' }}
+        </h2>
+
+        <p class="mt-2 text-sm text-slate-500">
+            {{ 'Perbarui informasi supplier yang sudah terdaftar.' if supplier else 'Tambahkan informasi supplier baru ke dalam sistem procurement.' }}
+        </p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+        <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+            <h3 class="font-semibold text-slate-800">Informasi Supplier</h3>
+            <p class="mt-1 text-sm text-slate-500">
+                Kolom bertanda * wajib diisi.
+            </p>
         </div>
 
-        <br>
+        <form
+            action="{{ url_for('edit_supplier', supplier_id=supplier.id) if supplier else url_for('add_supplier') }}"
+            method="POST"
+            class="space-y-6 p-6"
+        >
 
-        <div>
-            <label for="contact_person">Contact Person</label><br>
-            <input
-                type="text"
-                id="contact_person"
-                name="contact_person"
-                value="{{ supplier.contact_person or '' if supplier else '' }}"
-            >
-        </div>
+            <!-- Nama Supplier -->
+            <div>
+                <label for="name" class="mb-2 block text-sm font-medium text-slate-700">
+                    Nama Supplier <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value="{{ supplier.name if supplier else '' }}"
+                    placeholder="Contoh: PT Sumber Makmur"
+                    required
+                    class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+            </div>
 
-        <br>
+            <!-- Contact Person -->
+            <div>
+                <label for="contact_person" class="mb-2 block text-sm font-medium text-slate-700">
+                    Contact Person
+                </label>
+                <input
+                    type="text"
+                    id="contact_person"
+                    name="contact_person"
+                    value="{{ (supplier.contact_person or '') if supplier else '' }}"
+                    placeholder="Nama kontak supplier"
+                    class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+            </div>
 
-        <div>
-            <label for="email">Email</label><br>
-            <input
-                type="email"
-                id="email"
-                name="email"
-                value="{{ supplier.email or '' if supplier else '' }}"
-            >
-        </div>
+            <!-- Email & Phone -->
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                    <label for="email" class="mb-2 block text-sm font-medium text-slate-700">
+                        Email
+                    </label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value="{{ (supplier.email or '') if supplier else '' }}"
+                        placeholder="supplier@email.com"
+                        class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                </div>
 
-        <br>
+                <div>
+                    <label for="phone" class="mb-2 block text-sm font-medium text-slate-700">
+                        Nomor Telepon
+                    </label>
+                    <input
+                        type="text"
+                        id="phone"
+                        name="phone"
+                        value="{{ (supplier.phone or '') if supplier else '' }}"
+                        placeholder="08xxxxxxxxxx"
+                        class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                </div>
+            </div>
 
-        <div>
-            <label for="phone">Nomor Telepon</label><br>
-            <input
-                type="text"
-                id="phone"
-                name="phone"
-                value="{{ supplier.phone or '' if supplier else '' }}"
-            >
-        </div>
+            <!-- Address -->
+            <div>
+                <label for="address" class="mb-2 block text-sm font-medium text-slate-700">
+                    Alamat
+                </label>
+                <textarea
+                    id="address"
+                    name="address"
+                    rows="4"
+                    placeholder="Masukkan alamat lengkap supplier"
+                    class="w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >{{ (supplier.address or '') if supplier else '' }}</textarea>
+            </div>
 
-        <br>
+            <!-- Actions -->
+            <div class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
+                <a
+                    href="{{ url_for('suppliers') }}"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
+                >
+                    Batal
+                </a>
 
-        <div>
-            <label for="address">Alamat</label><br>
-            <textarea id="address" name="address" rows="3">{{ supplier.address or '' if supplier else '' }}</textarea>
-        </div>
+                <button
+                    type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                         viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor" class="h-4 w-4">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    {{ 'Simpan Perubahan' if supplier else 'Simpan Supplier' }}
+                </button>
+            </div>
 
-        <br>
+        </form>
+    </div>
 
-        <button type="submit">
-            {{ 'Simpan Perubahan' if supplier else 'Simpan Supplier' }}
-        </button>
+</div>
 
-        <a href="{{ url_for('suppliers') }}">Batal</a>
-    </form>
-</body>
-</html>
+{% endblock %}

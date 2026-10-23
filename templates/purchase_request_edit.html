@@ -22,21 +22,6 @@
     </p>
 </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-        <div class="mb-5 rounded-lg border px-4 py-3 text-sm
-            {% if category == 'success' %}
-                border-green-200 bg-green-50 text-green-700
-            {% elif category == 'error' or category == 'danger' %}
-                border-red-200 bg-red-50 text-red-700
-            {% else %}
-                border-amber-200 bg-amber-50 text-amber-700
-            {% endif %}">
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endwith %}
-
 <!-- Request Information -->
 <div class="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
     <div class="flex items-start gap-3">

@@ -22,21 +22,6 @@
     </p>
 </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-        <div class="mb-5 rounded-lg border px-4 py-3 text-sm
-            {% if category == 'success' %}
-                border-green-200 bg-green-50 text-green-700
-            {% elif category == 'error' or category == 'danger' %}
-                border-red-200 bg-red-50 text-red-700
-            {% else %}
-                border-amber-200 bg-amber-50 text-amber-700
-            {% endif %}">
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endwith %}
-
 <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
 
     <div class="border-b border-slate-200 px-6 py-5">
@@ -86,6 +71,27 @@
                         </a>
                     </div>
                 {% endif %}
+            </div>
+            
+            <!-- Judul Permintaan -->
+            <div class="md:col-span-2">
+                <label for="title" class="mb-2 block text-sm font-semibold text-slate-700">
+                    Judul Permintaan <span class="text-red-500">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    required
+                    maxlength="200"
+                    placeholder="Contoh: Pengadaan Laptop untuk Tim IT"
+                    class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Masukkan judul yang menjelaskan tujuan pengadaan.
+                </p>
             </div>
 
             <!-- Jumlah -->
