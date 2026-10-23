@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Management</title>
+</head>
+<body>
+    <h1>Supplier Management</h1>
+    <p>
+        <a href="{{ url_for('add_supplier') }}">+ Tambah Supplier</a>
+    </p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+    {% endwith %}
+
+    <p>Daftar supplier yang terdaftar dalam sistem.</p>
+
+    <a href="/">Kembali ke Dashboard</a>
+
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nama Supplier</th>
+                <th>Contact Person</th>
+                <th>Email</th>
+                <th>Telepon</th>
+                <th>Alamat</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for supplier in suppliers %}
+                <tr>
+                    <td>{{ supplier.id }}</td>
+                    <td>{{ supplier.name }}</td>
+                    <td>{{ supplier.contact_person or '-' }}</td>
+                    <td>{{ supplier.email or '-' }}</td>
+                    <td>{{ supplier.phone or '-' }}</td>
+                    <td>{{ supplier.address or '-' }}</td>    
+                    <td>
+                        <a href="{{ url_for('edit_supplier', supplier_id=supplier.id) }}">
+                            Edit
+                        </a>
+
+                        <form
+                            action="{{ url_for('delete_supplier', supplier_id=supplier.id) }}"
+                            method="POST"
+                            style="display: inline;"
+                            onsubmit="return confirm('Yakin ingin menghapus supplier ini?');"
+                        >
+                            <button type="submit">Hapus</button>
+                        </form>
+                    </td>
+
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7">Belum ada data supplier.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
