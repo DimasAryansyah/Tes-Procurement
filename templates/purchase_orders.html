@@ -1,66 +1,195 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Purchase Orders</title>
-</head>
-<body>
-    <h1>Purchase Orders</h1>
+{% extends "base.html" %}
 
-    <p><a href="/">Kembali ke Dashboard</a></p>
-    <p>
-        <a href="{{ url_for('purchase_requests') }}">
+{% block title %}Purchase Orders{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm font-medium text-blue-600">Procurement Management</p>
+            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-800">
+                Purchase Orders
+            </h1>
+            <p class="mt-1 text-sm text-slate-500">
+                Kelola pesanan pembelian dan pantau status penerimaan barang.
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('purchase_requests') }}"
+            class="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+            </svg>
             Lihat Purchase Requests
         </a>
-    </p>
+    </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+    <!-- Summary -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Total Purchase Orders</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-800">
+                        {{ orders|length }}
+                    </p>
+                </div>
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/>
+                        <path d="M14 3v6h5M9 13h6M9 17h6"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
 
-    <table border="1" cellpadding="8" cellspacing="0">
-        <thead>
-            <tr>
-                <th>No. PO</th>
-                <th>No. Request</th>
-                <th>Judul Permintaan</th>
-                <th>Supplier</th>
-                <th>Tanggal Pesanan</th>
-                <th>Catatan</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for order in orders %}
-                <tr>
-                    <td>{{ order.po_number }}</td>
-                    <td>{{ order.request_number }}</td>
-                    <td>{{ order.request_title }}</td>
-                    <td>{{ order.supplier_name }}</td>
-                    <td>{{ order.order_date }}</td>
-                    <td>{{ order.notes or '-' }}</td>                   
-                    <td>
-                        {% if order.receipt_id %}
-                            Sudah Diterima
-                        {% elif order.request_status == 'Ordered' %}
-                            <a href="{{ url_for('create_goods_receipt', po_id=order.id) }}">
-                                Catat Penerimaan
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Menunggu Penerimaan</p>
+                    <p class="mt-2 text-3xl font-bold text-amber-600">
+                        {% set pending_count = namespace(value=0) %}
+                        {% for order in orders %}
+                            {% if not order.receipt_id and order.request_status == 'Ordered' %}
+                                {% set pending_count.value = pending_count.value + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ pending_count.value }}
+                    </p>
+                </div>
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M12 7v5l3 2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-2 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="font-semibold text-slate-800">Daftar Purchase Orders</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    Daftar pesanan pembelian yang telah dibuat.
+                </p>
+            </div>
+            <span class="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                {{ orders|length }} pesanan
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[1000px] text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-5 py-4 font-semibold">No. PO</th>
+                        <th class="px-5 py-4 font-semibold">No. Request</th>
+                        <th class="px-5 py-4 font-semibold">Judul Permintaan</th>
+                        <th class="px-5 py-4 font-semibold">Supplier</th>
+                        <th class="px-5 py-4 font-semibold">Tanggal Pesanan</th>
+                        <th class="px-5 py-4 font-semibold">Catatan</th>
+                        <th class="px-5 py-4 text-center font-semibold">Status / Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                    {% for order in orders %}
+                    <tr class="transition hover:bg-slate-50/80">
+                        <td class="whitespace-nowrap px-5 py-4">
+                            <span class="font-semibold text-blue-700">
+                                {{ order.po_number }}
+                            </span>
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4">
+                            <span class="text-slate-600">
+                                {{ order.request_number }}
+                            </span>
+                        </td>
+
+                        <td class="max-w-xs px-5 py-4">
+                            <p class="font-medium text-slate-800">
+                                {{ order.request_title or '-' }}
+                            </p>
+                        </td>
+
+                        <td class="px-5 py-4 text-slate-600">
+                            {{ order.supplier_name or '-' }}
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-slate-600">
+                            {{ order.order_date or '-' }}
+                        </td>
+
+                        <td class="max-w-xs px-5 py-4 text-slate-500">
+                            {{ order.notes or '-' }}
+                        </td>
+
+                        <td class="px-5 py-4 text-center">
+                            {% if order.receipt_id %}
+                                <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                    Sudah Diterima
+                                </span>
+                            {% elif order.request_status == 'Ordered' %}
+                                <a
+                                    href="{{ url_for('create_goods_receipt', po_id=order.id) }}"
+                                    class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-navy px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 5v14M5 12h14"/>
+                                    </svg>
+                                    Catat Penerimaan
+                                </a>
+                            {% else %}
+                                <span class="text-slate-400">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-5 py-16 text-center">
+                            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/>
+                                    <path d="M14 3v6h5M9 13h6M9 17h6"/>
+                                </svg>
+                            </div>
+                            <h3 class="mt-4 text-sm font-semibold text-slate-800">
+                                Belum Ada Purchase Order
+                            </h3>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Purchase Order akan muncul setelah Purchase Request disetujui dan dibuatkan pesanan.
+                            </p>
+                            <a
+                                href="{{ url_for('purchase_requests') }}"
+                                class="mt-4 inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                            >
+                                Lihat Purchase Requests
                             </a>
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="7">Belum ada Purchase Order.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if orders %}
+        <div class="border-t border-slate-200 px-5 py-3">
+            <p class="text-xs text-slate-500">
+                Menampilkan {{ orders|length }} Purchase Order.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

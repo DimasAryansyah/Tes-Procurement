@@ -1,50 +1,188 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buat Purchase Order</title>
-</head>
-<body>
-    <h1>Buat Purchase Order</h1>
+{% extends "base.html" %}
 
-    <h3>Informasi Purchase Request</h3>
-    <p>
-        Nomor Request:
-        <strong>{{ purchase_request.request_number }}</strong>
-    </p>
-    <p>Judul: {{ purchase_request.title }}</p>
-    <p>Jumlah: {{ purchase_request.quantity }}</p>
-    <p>
-        Estimasi biaya:
-        Rp {{ "{:,.0f}".format(purchase_request.estimated_cost) }}
-    </p>
+{% block title %}Buat Purchase Order{% endblock %}
 
-    <form method="POST">
-        <div>
-            <label for="supplier_id">Pilih Supplier *</label><br>
-            <select id="supplier_id" name="supplier_id" required>
-                <option value="">-- Pilih Supplier --</option>
-                {% for supplier in suppliers %}
-                    <option value="{{ supplier.id }}">
-                        {{ supplier.name }}
-                    </option>
-                {% endfor %}
-            </select>
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-6">
+
+    <!-- Header -->
+    <div>
+        <a
+            href="{{ url_for('purchase_requests') }}"
+            class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-800"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m15 18-6-6 6-6"/>
+            </svg>
+            Kembali ke Purchase Requests
+        </a>
+
+        <div class="mt-4">
+            <p class="text-sm font-medium text-blue-600">
+                Procurement Management
+            </p>
+            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-800">
+                Buat Purchase Order
+            </h1>
+            <p class="mt-1 text-sm text-slate-500">
+                Pilih supplier dan lengkapi informasi pesanan untuk Purchase Request yang telah disetujui.
+            </p>
+        </div>
+    </div>
+
+    <!-- Purchase Request Information -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/>
+                    <path d="M14 3v6h5M9 13h6M9 17h4"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="font-semibold text-slate-800">
+                    Informasi Purchase Request
+                </h2>
+                <p class="text-sm text-slate-500">
+                    Detail permintaan yang akan dibuatkan pesanan.
+                </p>
+            </div>
         </div>
 
-        <br>
+        <div class="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
+            <div class="rounded-lg bg-slate-50 p-4">
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Nomor Request
+                </p>
+                <p class="mt-2 font-semibold text-blue-700">
+                    {{ purchase_request.request_number }}
+                </p>
+            </div>
 
-        <div>
-            <label for="notes">Catatan Pesanan</label><br>
-            <textarea id="notes" name="notes" rows="4"></textarea>
+            <div class="rounded-lg bg-slate-50 p-4">
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Judul Permintaan
+                </p>
+                <p class="mt-2 font-semibold text-slate-800">
+                    {{ purchase_request.title or '-' }}
+                </p>
+            </div>
+
+            <div class="rounded-lg bg-slate-50 p-4">
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Jumlah Barang
+                </p>
+                <p class="mt-2 font-semibold text-slate-800">
+                    {{ purchase_request.quantity }}
+                </p>
+            </div>
+
+            <div class="rounded-lg bg-blue-50 p-4">
+                <p class="text-xs font-medium uppercase tracking-wide text-blue-700">
+                    Estimasi Biaya
+                </p>
+                <p class="mt-2 text-xl font-bold text-blue-800">
+                    Rp {{ "{:,.0f}".format(purchase_request.estimated_cost|float) }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchase Order Form -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+            <h2 class="font-semibold text-slate-800">
+                Informasi Pesanan
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+                Lengkapi informasi berikut untuk membuat Purchase Order.
+            </p>
         </div>
 
-        <br>
+        <form method="POST" class="space-y-6 p-5">
 
-        <button type="submit">Buat Purchase Order</button>
-        <a href="{{ url_for('purchase_requests') }}">Batal</a>
-    </form>
-</body>
-</html>
+            <!-- Supplier -->
+            <div>
+                <label
+                    for="supplier_id"
+                    class="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                    Supplier <span class="text-red-500">*</span>
+                </label>
+
+                <select
+                    id="supplier_id"
+                    name="supplier_id"
+                    required
+                    class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                    <option value="">-- Pilih Supplier --</option>
+                    {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}">
+                            {{ supplier.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Pilih supplier yang akan menyediakan barang sesuai permintaan.
+                </p>
+
+                {% if not suppliers %}
+                    <p class="mt-2 text-sm text-amber-600">
+                        Belum ada supplier. Tambahkan supplier terlebih dahulu sebelum membuat Purchase Order.
+                    </p>
+                {% endif %}
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label
+                    for="notes"
+                    class="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                    Catatan Pesanan
+                    <span class="font-normal text-slate-400">(Opsional)</span>
+                </label>
+
+                <textarea
+                    id="notes"
+                    name="notes"
+                    rows="4"
+                    maxlength="1000"
+                    placeholder="Masukkan catatan tambahan, ketentuan pengiriman, atau informasi lain yang diperlukan..."
+                    class="w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                ></textarea>
+
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Maksimal 1.000 karakter.
+                </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                <a
+                    href="{{ url_for('purchase_requests') }}"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                    Batal
+                </a>
+
+                <button
+                    type="submit"
+                    {% if not suppliers %}disabled{% endif %}
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Buat Purchase Order
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+{% endblock %}
