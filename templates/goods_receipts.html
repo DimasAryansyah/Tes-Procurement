@@ -1,57 +1,201 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goods Receipt</title>
-</head>
-<body>
-    <h1>Goods Receipt</h1>
+{% extends "base.html" %}
 
-    <p>
-        <a href="/">Kembali ke Dashboard</a>
-        |
-        <a href="{{ url_for('purchase_orders') }}">Purchase Orders</a>
-    </p>
+{% block title %}Goods Receipt{% endblock %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+{% block content %}
+<div class="space-y-6">
 
-    <table border="1" cellpadding="8" cellspacing="0">
-        <thead>
-            <tr>
-                <th>No. Penerimaan</th>
-                <th>No. PO</th>
-                <th>No. Request</th>
-                <th>Judul Permintaan</th>
-                <th>Jumlah Diterima</th>
-                <th>Diterima Oleh</th>
-                <th>Tanggal Penerimaan</th>
-                <th>Catatan</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for receipt in receipts %}
-                <tr>
-                    <td>GR-{{ "%04d"|format(receipt.id) }}</td>
-                    <td>{{ receipt.po_number }}</td>
-                    <td>{{ receipt.request_number }}</td>
-                    <td>{{ receipt.request_title }}</td>
-                    <td>{{ receipt.received_quantity }}</td>
-                    <td>{{ receipt.receiver_name }}</td>
-                    <td>{{ receipt.received_date }}</td>
-                    <td>{{ receipt.notes or '-' }}</td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="8">Belum ada penerimaan barang.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+    <!-- Header -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm font-medium text-blue-600">Procurement Management</p>
+            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-800">
+                Goods Receipt
+            </h1>
+            <p class="mt-1 text-sm text-slate-500">
+                Kelola dan pantau riwayat penerimaan barang dari Purchase Order.
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('purchase_orders') }}"
+            class="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Lihat Purchase Orders
+        </a>
+    </div>
+
+    <!-- Summary -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">
+                        Total Penerimaan
+                    </p>
+                    <p class="mt-2 text-3xl font-bold text-slate-800">
+                        {{ receipts|length }}
+                    </p>
+                    <p class="mt-1 text-xs text-slate-500">
+                        Seluruh catatan penerimaan barang
+                    </p>
+                </div>
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M3 7h18v13H3z"/>
+                        <path d="M3 7l3-4h12l3 4M8 12h8M8 16h5"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">
+                        Total Unit Diterima
+                    </p>
+                    <p class="mt-2 text-3xl font-bold text-emerald-600">
+                        {% set total_quantity = namespace(value=0) %}
+                        {% for receipt in receipts %}
+                            {% set total_quantity.value = total_quantity.value + (receipt.received_quantity or 0)|int %}
+                        {% endfor %}
+                        {{ "{:,}".format(total_quantity.value) }}
+                    </p>
+                    <p class="mt-1 text-xs text-slate-500">
+                        Akumulasi jumlah barang yang tercatat
+                    </p>
+                </div>
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="m5 12 4 4L19 6"/>
+                        <circle cx="12" cy="12" r="9"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Table -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+        <div class="flex flex-col gap-2 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="font-semibold text-slate-800">
+                    Riwayat Penerimaan Barang
+                </h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    Informasi penerimaan berdasarkan Purchase Order yang dibuat.
+                </p>
+            </div>
+
+            <span class="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                {{ receipts|length }} penerimaan
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[1200px] text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-5 py-4 font-semibold">No. Penerimaan</th>
+                        <th class="px-5 py-4 font-semibold">No. PO</th>
+                        <th class="px-5 py-4 font-semibold">No. Request</th>
+                        <th class="px-5 py-4 font-semibold">Judul Permintaan</th>
+                        <th class="px-5 py-4 text-right font-semibold">Jumlah Diterima</th>
+                        <th class="px-5 py-4 font-semibold">Diterima Oleh</th>
+                        <th class="px-5 py-4 font-semibold">Tanggal Penerimaan</th>
+                        <th class="px-5 py-4 font-semibold">Catatan</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                    {% for receipt in receipts %}
+                    <tr class="transition hover:bg-slate-50/80">
+
+                        <td class="whitespace-nowrap px-5 py-4">
+                            <span class="font-semibold text-blue-700">
+                                GR-{{ "%04d"|format(receipt.id) }}
+                            </span>
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 font-medium text-slate-700">
+                            {{ receipt.po_number }}
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-slate-600">
+                            {{ receipt.request_number }}
+                        </td>
+
+                        <td class="max-w-xs px-5 py-4">
+                            <p class="font-medium text-slate-800">
+                                {{ receipt.request_title or '-' }}
+                            </p>
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-right">
+                            <span class="inline-flex items-center rounded-lg bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700">
+                                {{ receipt.received_quantity }}
+                            </span>
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-slate-600">
+                            {{ receipt.receiver_name or '-' }}
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-slate-600">
+                            {{ receipt.received_date or '-' }}
+                        </td>
+
+                        <td class="max-w-xs px-5 py-4 text-slate-500">
+                            {{ receipt.notes or '-' }}
+                        </td>
+
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="px-5 py-16 text-center">
+                            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <path d="M3 7h18v13H3z"/>
+                                    <path d="M3 7l3-4h12l3 4M8 12h8"/>
+                                </svg>
+                            </div>
+
+                            <h3 class="mt-4 text-sm font-semibold text-slate-800">
+                                Belum Ada Penerimaan Barang
+                            </h3>
+
+                            <p class="mx-auto mt-1 max-w-md text-sm text-slate-500">
+                                Catatan penerimaan akan muncul setelah barang dari Purchase Order diterima dan dicatat ke dalam sistem.
+                            </p>
+
+                            <a
+                                href="{{ url_for('purchase_orders') }}"
+                                class="mt-4 inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                            >
+                                Lihat Purchase Orders
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if receipts %}
+        <div class="border-t border-slate-200 px-5 py-3">
+            <p class="text-xs text-slate-500">
+                Menampilkan {{ receipts|length }} catatan penerimaan barang.
+            </p>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}

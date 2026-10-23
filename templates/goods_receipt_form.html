@@ -1,60 +1,187 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catat Penerimaan Barang</title>
-</head>
-<body>
-    <h1>Catat Penerimaan Barang</h1>
+{% extends "base.html" %}
 
-    <h3>Informasi Purchase Order</h3>
-    <p>No. PO: <strong>{{ order.po_number }}</strong></p>
-    <p>No. Request: {{ order.request_number }}</p>
-    <p>Judul: {{ order.title }}</p>
-    <p>Jumlah pesanan: {{ order.requested_quantity }}</p>
+{% block title %}Catat Penerimaan Barang{% endblock %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-6">
 
-    <form method="POST">
-        <div>
-            <label for="received_quantity">Jumlah Diterima *</label><br>
-            <input
-                type="number"
-                id="received_quantity"
-                name="received_quantity"
-                min="1"
-                max="{{ order.requested_quantity }}"
-                value="{{ order.requested_quantity }}"
-                required
-            >
-            <p>
-                Untuk versi ini, jumlah yang diterima harus sama
-                dengan jumlah pesanan.
+    <!-- Header -->
+    <div>
+        <a
+            href="{{ url_for('purchase_orders') }}"
+            class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-800"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m15 18-6-6 6-6"/>
+            </svg>
+            Kembali ke Purchase Orders
+        </a>
+
+        <div class="mt-4">
+            <p class="text-sm font-medium text-blue-600">
+                Procurement Management
+            </p>
+            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-800">
+                Catat Penerimaan Barang
+            </h1>
+            <p class="mt-1 text-sm text-slate-500">
+                Catat jumlah barang yang diterima berdasarkan Purchase Order.
+            </p>
+        </div>
+    </div>
+
+    <!-- Purchase Order Information -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/>
+                    <path d="M14 3v6h5M9 13h6M9 17h4"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="font-semibold text-slate-800">
+                    Informasi Purchase Order
+                </h2>
+                <p class="text-sm text-slate-500">
+                    Periksa detail pesanan sebelum mencatat penerimaan.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+            <div class="rounded-lg bg-slate-50 p-4">
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Nomor Purchase Order
+                </p>
+                <p class="mt-2 font-semibold text-blue-700">
+                    {{ order.po_number }}
+                </p>
+            </div>
+
+            <div class="rounded-lg bg-slate-50 p-4">
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Nomor Purchase Request
+                </p>
+                <p class="mt-2 font-semibold text-slate-800">
+                    {{ order.request_number }}
+                </p>
+            </div>
+
+            <div class="rounded-lg bg-slate-50 p-4 sm:col-span-2">
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Judul Permintaan
+                </p>
+                <p class="mt-2 font-semibold text-slate-800">
+                    {{ order.title or '-' }}
+                </p>
+            </div>
+
+            <div class="rounded-lg bg-blue-50 p-4 sm:col-span-2">
+                <p class="text-xs font-medium uppercase tracking-wide text-blue-700">
+                    Jumlah Pesanan
+                </p>
+                <p class="mt-2 text-2xl font-bold text-blue-800">
+                    {{ order.requested_quantity }}
+                    <span class="text-sm font-medium">unit</span>
+                </p>
+                <p class="mt-1 text-xs text-blue-700">
+                    Jumlah penerimaan harus sama dengan jumlah pesanan untuk versi ini.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goods Receipt Form -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+            <h2 class="font-semibold text-slate-800">
+                Informasi Penerimaan
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+                Lengkapi detail barang yang telah diterima.
             </p>
         </div>
 
-        <br>
+        <form method="POST" class="space-y-6 p-5">
 
-        <div>
-            <label for="notes">Catatan Penerimaan</label><br>
-            <textarea
-                id="notes"
-                name="notes"
-                rows="4"
-                placeholder="Contoh: Barang diterima dalam kondisi baik."
-            ></textarea>
-        </div>
+            <!-- Received Quantity -->
+            <div>
+                <label
+                    for="received_quantity"
+                    class="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                    Jumlah Diterima <span class="text-red-500">*</span>
+                </label>
 
-        <br>
+                <div class="relative">
+                    <input
+                        type="number"
+                        id="received_quantity"
+                        name="received_quantity"
+                        min="{{ order.requested_quantity }}"
+                        max="{{ order.requested_quantity }}"
+                        value="{{ order.requested_quantity }}"
+                        required
+                        class="w-full rounded-lg border border-slate-300 px-4 py-3 pr-16 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                        unit
+                    </span>
+                </div>
 
-        <button type="submit">Simpan Penerimaan</button>
-        <a href="{{ url_for('purchase_orders') }}">Batal</a>
-    </form>
-</body>
-</html>
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Untuk versi ini, jumlah yang diterima harus sama dengan jumlah pesanan.
+                </p>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label
+                    for="notes"
+                    class="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                    Catatan Penerimaan
+                    <span class="font-normal text-slate-400">(Opsional)</span>
+                </label>
+
+                <textarea
+                    id="notes"
+                    name="notes"
+                    rows="4"
+                    maxlength="1000"
+                    placeholder="Contoh: Barang diterima dalam kondisi baik."
+                    class="w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                ></textarea>
+
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Tambahkan catatan kondisi barang atau informasi lain jika diperlukan.
+                </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                <a
+                    href="{{ url_for('purchase_orders') }}"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                    Batal
+                </a>
+
+                <button
+                    type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m5 12 4 4L19 6"/>
+                    </svg>
+                    Simpan Penerimaan
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+{% endblock %}
