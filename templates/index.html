@@ -76,14 +76,34 @@
                         Rp {{ "{:,.0f}".format(item.estimated_cost) }}
                     </td>
                     <td class="px-6 py-4">
-                        {% if item.status == 'Approved' %}
-                            <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">Approved</span>
-                        {% elif item.status == 'Rejected' %}
-                            <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">Rejected</span>
+                        {% if item.status == 'Draft' %}
+                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                                Draft
+                            </span>
                         {% elif item.status == 'Submitted' %}
-                            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Submitted</span>
+                            <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                                Submitted
+                            </span>
+                        {% elif item.status == 'Approved' %}
+                            <span class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                                Approved
+                            </span>
+                        {% elif item.status == 'Rejected' %}
+                            <span class="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                                Rejected
+                            </span>
+                        {% elif item.status == 'Ordered' %}
+                            <span class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                                Ordered
+                            </span>
+                        {% elif item.status == 'Received' %}
+                            <span class="inline-flex rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold text-teal-700">
+                                Received
+                            </span>
                         {% else %}
-                            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ item.status }}</span>
+                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                                {{ item.status }}
+                            </span>
                         {% endif %}
                     </td>
                 </tr>

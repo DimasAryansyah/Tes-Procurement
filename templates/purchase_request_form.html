@@ -1,116 +1,199 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buat Purchase Request</title>
-</head>
-<body>
-    <h1>Buat Purchase Request</h1>
+{% extends "base.html" %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+{% block title %}Buat Purchase Request | Procurement{% endblock %}
 
-    <form method="POST">
-        <div>
-            <label for="item_id">Pilih Barang *</label><br>
-            <select id="item_id" name="item_id" required>
-                <option value="">-- Pilih Barang --</option>
-                {% for item in items %}
-                    <option
-                        value="{{ item.id }}"
-                        data-description="{{ item.description or '' }}"
-                    >
-                        {{ item.name }} - {{ item.category or 'Tanpa Kategori' }}
-                        ({{ item.unit }})
-                    </option>
-                {% endfor %}
-            </select>
+{% block content %}
 
-            {% if not items %}
-                <p>Belum ada barang terdaftar. Silakan tambahkan barang terlebih dahulu.</p>
-                <a href="{{ url_for('add_item') }}">Tambah Barang</a>
-            {% endif %}
+<div class="mb-8">
+    <div class="mb-3">
+        <a href="{{ url_for('purchase_requests') }}"
+           class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-navy">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Kembali ke Purchase Request
+        </a>
+    </div>
+
+    <h2 class="text-2xl font-bold text-slate-900">Buat Purchase Request</h2>
+    <p class="mt-2 text-sm text-slate-500">
+        Lengkapi informasi barang dan kebutuhan sebelum menyimpan atau mengajukan permintaan.
+    </p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+        <div class="mb-5 rounded-lg border px-4 py-3 text-sm
+            {% if category == 'success' %}
+                border-green-200 bg-green-50 text-green-700
+            {% elif category == 'error' or category == 'danger' %}
+                border-red-200 bg-red-50 text-red-700
+            {% else %}
+                border-amber-200 bg-amber-50 text-amber-700
+            {% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
+
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+
+    <div class="border-b border-slate-200 px-6 py-5">
+        <h3 class="text-lg font-semibold text-slate-900">Informasi Permintaan</h3>
+        <p class="mt-1 text-sm text-slate-500">
+            Kolom bertanda <span class="font-semibold text-red-500">*</span> wajib diisi.
+        </p>
+    </div>
+
+    <form method="POST" class="p-6">
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+
+            <!-- Pilih Barang -->
+            <div class="md:col-span-2">
+                <label for="item_id" class="mb-2 block text-sm font-semibold text-slate-700">
+                    Pilih Barang <span class="text-red-500">*</span>
+                </label>
+
+                <select id="item_id"
+                        name="item_id"
+                        required
+                        {% if not items %}disabled{% endif %}
+                        class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100">
+                    <option value="">-- Pilih Barang --</option>
+                    {% for item in items %}
+                        <option
+                            value="{{ item.id }}"
+                            data-description="{{ item.description or '' }}"
+                        >
+                            {{ item.name }} - {{ item.category or 'Tanpa Kategori' }} ({{ item.unit }})
+                        </option>
+                    {% endfor %}
+                </select>
+
+                {% if not items %}
+                    <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                        <p class="text-sm text-amber-800">
+                            Belum ada barang terdaftar. Tambahkan barang terlebih dahulu sebelum membuat permintaan.
+                        </p>
+                        <a href="{{ url_for('add_item') }}"
+                           class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-amber-800 underline hover:text-amber-900">
+                            Tambah Barang
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M7 7h10v10"/>
+                            </svg>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Jumlah -->
+            <div>
+                <label for="quantity" class="mb-2 block text-sm font-semibold text-slate-700">
+                    Jumlah <span class="text-red-500">*</span>
+                </label>
+                <input type="number"
+                       id="quantity"
+                       name="quantity"
+                       min="1"
+                       step="1"
+                       required
+                       placeholder="Contoh: 10"
+                       class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Masukkan jumlah barang yang dibutuhkan.
+                </p>
+            </div>
+
+            <!-- Estimasi Biaya -->
+            <div>
+                <label for="estimated_cost" class="mb-2 block text-sm font-semibold text-slate-700">
+                    Estimasi Biaya (Rp) <span class="text-red-500">*</span>
+                </label>
+                <div class="flex overflow-hidden rounded-lg border border-slate-300 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+                    <span class="flex items-center border-r border-slate-300 bg-slate-50 px-4 text-sm font-semibold text-slate-600">
+                        Rp
+                    </span>
+                    <input type="number"
+                           id="estimated_cost"
+                           name="estimated_cost"
+                           min="0"
+                           step="0.01"
+                           required
+                           placeholder="Contoh: 150000"
+                           class="w-full min-w-0 px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400">
+                </div>
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Masukkan perkiraan total biaya permintaan.
+                </p>
+            </div>
+
+            <!-- Deskripsi -->
+            <div class="md:col-span-2">
+                <label for="description" class="mb-2 block text-sm font-semibold text-slate-700">
+                    Deskripsi Kebutuhan
+                </label>
+                <textarea id="description"
+                          name="description"
+                          rows="4"
+                          placeholder="Jelaskan tujuan atau kebutuhan pengadaan barang..."
+                          class="w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea>
+                <p class="mt-1.5 text-xs text-slate-500">
+                    Deskripsi barang dari katalog akan diisi otomatis jika kolom ini masih kosong.
+                </p>
+            </div>
+
         </div>
 
-        <br>
+        <!-- Actions -->
+        <div class="mt-8 flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
 
-        <div>
-            <label for="description">Deskripsi Kebutuhan</label><br>
-            <textarea
-                id="description"
-                name="description"
-                rows="4"
-            ></textarea>
+            <a href="{{ url_for('purchase_requests') }}"
+               class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                Batal
+            </a>
+
+            <div class="flex flex-col gap-3 sm:flex-row">
+                <button type="submit"
+                        name="action"
+                        value="draft"
+                        {% if not items %}disabled{% endif %}
+                        class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 21v-7h8v7M8 3v5h6"/>
+                    </svg>
+                    Simpan Draft
+                </button>
+
+                <button type="submit"
+                        name="action"
+                        value="submit"
+                        {% if not items %}disabled{% endif %}
+                        class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6l6 6-6 6"/>
+                    </svg>
+                    Ajukan Request
+                </button>
+            </div>
+
         </div>
-
-        <br>
-
-        <div>
-            <label for="quantity">Jumlah *</label><br>
-            <input
-                type="number"
-                id="quantity"
-                name="quantity"
-                min="1"
-                step="1"
-                required
-            >
-        </div>
-
-        <br>
-
-        <div>
-            <label for="estimated_cost">Estimasi Biaya (Rp) *</label><br>
-            <input
-                type="number"
-                id="estimated_cost"
-                name="estimated_cost"
-                min="0"
-                step="0.01"
-                required
-            >
-        </div>
-
-        <br>
-
-        <button
-            type="submit"
-            name="action"
-            value="draft"
-            {% if not items %}disabled{% endif %}
-        >
-            Simpan Draft
-        </button>
-
-        <button
-            type="submit"
-            name="action"
-            value="submit"
-            {% if not items %}disabled{% endif %}
-        >
-            Ajukan Request
-        </button>
-
-        <a href="{{ url_for('purchase_requests') }}">Batal</a>
     </form>
+</div>
 
-    <script>
-        const itemSelect = document.getElementById("item_id");
-        const descriptionInput = document.getElementById("description");
+<script>
+    const itemSelect = document.getElementById("item_id");
+    const descriptionInput = document.getElementById("description");
 
-        itemSelect.addEventListener("change", function () {
-            const selectedOption = this.options[this.selectedIndex];
+    itemSelect.addEventListener("change", function () {
+        const selectedOption = this.options[this.selectedIndex];
 
-            if (selectedOption.value && !descriptionInput.value.trim()) {
-                descriptionInput.value =
-                    selectedOption.dataset.description || "";
-            }
-        });
-    </script>
-</body>
-</html>
+        if (selectedOption.value && !descriptionInput.value.trim()) {
+            descriptionInput.value = selectedOption.dataset.description || "";
+        }
+    });
+</script>
+
+{% endblock %}
